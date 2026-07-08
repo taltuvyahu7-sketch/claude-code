@@ -256,6 +256,11 @@ const ORDERS = [{"n":"#10305","d":"2026-07-08T13:32:29Z","c":"Tribula Schweiz","
 
 const UPDATED = "8 ביולי 2026, 17:35";
 
+// עלויות שילוח בפועל לפי מספר מעקב (AWB), בשקלים — מתוך חשבוניות DHL/FedEx
+// שהועלו לצ'אט. ראו shipping-costs.json. ILS_PER_EUR הוא שער המרה משוער.
+const ILS_PER_EUR = 3.95;
+const SHIP_COSTS = {};
+
 // הודעות לקוחות מהג'ימייל (Shopify Inbox) — ללא מענה
 const MESSAGES = [
   { id: "m-pouzar", who: "Michal Pouzar", date: "8.7", order: "", sev: "info",
@@ -470,6 +475,13 @@ function detailHTML(o) {
       const profit = netProducts - totalCost;
       const margin = netProducts > 0 ? Math.round(profit / netProducts * 100) : 0;
       parts.push(`רווח גולמי: <span class="${profit >= 0 ? "discount" : "refnote"}"><b>${eur2(profit)}</b> (${margin}%)</span>`);
+      const shipIls = o.ship.reduce((a, s) => a + (SHIP_COSTS[s.tn] || 0), 0);
+      if (shipIls > 0) {
+        const shipEur = shipIls / ILS_PER_EUR;
+        const net = o.t - o.ref - totalCost - shipEur;
+        parts.push(`עלות שילוח בפועל: <b>₪${shipIls.toLocaleString("en-US", { maximumFractionDigits: 2 })}</b> (≈${eur2(shipEur)})`);
+        parts.push(`רווח נטו אחרי שילוח: <span class="${net >= 0 ? "discount" : "refnote"}"><b>${eur2(net)}</b></span>`);
+      }
     }
   }
   return `<table class="itemstbl">
