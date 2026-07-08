@@ -3,6 +3,7 @@
   :root {
     --page: #f7f7f4;
     --surface: #fcfcfb;
+    --surface-2: #f3f2ee;
     --ink: #0b0b0b;
     --ink-2: #52514e;
     --muted: #898781;
@@ -25,6 +26,7 @@
     :root {
       --page: #0d0d0d;
       --surface: #1a1a19;
+      --surface-2: #222220;
       --ink: #ffffff;
       --ink-2: #c3c2b7;
       --muted: #898781;
@@ -41,14 +43,14 @@
     }
   }
   :root[data-theme="dark"] {
-    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #222220; --ink: #ffffff; --ink-2: #c3c2b7;
     --muted: #898781; --grid: #2c2c2a; --baseline: #383835;
     --border: rgba(255,255,255,0.10); --accent: #3987e5; --accent-soft: rgba(57,135,229,0.16);
     --good-text: #4cc24c; --warning-text: #fab219; --serious-text: #f09a77;
     --critical-text: #e56a6a; --chip-wash: rgba(255,255,255,0.06);
   }
   :root[data-theme="light"] {
-    --page: #f7f7f4; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e;
+    --page: #f7f7f4; --surface: #fcfcfb; --surface-2: #f3f2ee; --ink: #0b0b0b; --ink-2: #52514e;
     --muted: #898781; --grid: #e1e0d9; --baseline: #c3c2b7;
     --border: rgba(11,11,11,0.10); --accent: #2a78d6; --accent-soft: rgba(42,120,214,0.10);
     --good-text: #006300; --warning-text: #7a5200; --serious-text: #8c3a17;
@@ -98,12 +100,23 @@
   .alert.opportunity .stripe { background: var(--good); }
   .alert h3 { margin: 0 0 2px; font-size: 14.5px; font-weight: 700; }
   .alert p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
-  .alert .meta { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .alert .meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .alert .kind { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
   .alert.critical .kind { color: var(--critical-text); }
   .alert.serious .kind { color: var(--serious-text); }
   .alert.warning .kind { color: var(--warning-text); }
   .alert.opportunity .kind { color: var(--good-text); }
+  .alert.resolved, .msg.resolved { opacity: 0.62; }
+  .alert.resolved .stripe { background: var(--baseline); }
+
+  .resolve-btn {
+    border: 1px solid var(--border); background: transparent; color: var(--good-text);
+    border-radius: 999px; padding: 2px 11px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; margin-inline-start: auto; white-space: nowrap;
+  }
+  .resolve-btn:hover { background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .resolve-btn.undo { color: var(--ink-2); }
+  .resolved-bar { margin-top: 10px; }
 
   .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
   .chip {
@@ -112,7 +125,7 @@
   }
   .chip:hover { background: var(--chip-wash); }
   .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 600; }
-  .chip:focus-visible, .search:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chip:focus-visible, .search:focus-visible, a:focus-visible, .resolve-btn:focus-visible, tr.orow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .search {
     margin-inline-start: auto; border: 1px solid var(--border); background: var(--surface);
     color: var(--ink); border-radius: 8px; padding: 6px 12px; font-size: 13.5px; font-family: inherit; min-width: 210px;
@@ -123,13 +136,16 @@
   table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13.5px; }
   thead th {
     text-align: right; font-size: 12px; color: var(--muted); font-weight: 600;
-    padding: 10px 12px; border-bottom: 1px solid var(--grid); white-space: nowrap; position: sticky; top: 0; background: var(--surface);
+    padding: 10px 12px; border-bottom: 1px solid var(--grid); white-space: nowrap; position: sticky; top: 0; background: var(--surface); z-index: 1;
   }
   tbody td { padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: var(--chip-wash); }
+  tbody tr.orow { cursor: pointer; }
+  tbody tr.orow:hover { background: var(--chip-wash); }
   td.num, th.num { font-variant-numeric: tabular-nums; }
   .ordno { font-weight: 700; white-space: nowrap; }
+  .caret { display: inline-block; color: var(--muted); font-size: 10px; margin-inline-end: 5px; transition: transform 0.12s ease; }
+  tr.orow[aria-expanded="true"] .caret { transform: rotate(-90deg); }
   .cust { font-weight: 550; }
   .country { color: var(--muted); font-size: 12px; }
   .item { color: var(--ink-2); font-size: 12.5px; max-width: 240px; }
@@ -155,9 +171,17 @@
   .track a:hover { text-decoration: underline; }
   .empty { padding: 26px; text-align: center; color: var(--muted); font-size: 14px; }
 
+  tr.detailrow > td { background: var(--surface-2); padding: 14px 16px 16px; }
+  .itemstbl { min-width: 0; width: 100%; font-size: 12.5px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .itemstbl thead th { position: static; background: var(--surface); }
+  .itemstbl td, .itemstbl th { padding: 7px 12px; }
+  .itemstbl tbody tr:hover { background: none; }
+  .discount { color: var(--good-text); font-weight: 600; }
+  .osummary { margin-top: 10px; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .osummary b { color: var(--ink); }
+  .refnote { color: var(--critical-text); font-weight: 600; }
+
   .chartcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 16px 8px; position: relative; }
-  .chartcard h3 { margin: 0 0 2px; font-size: 14.5px; }
-  .chartcard .h2-note { margin-bottom: 6px; }
   #tooltip {
     position: fixed; pointer-events: none; background: var(--ink); color: var(--page);
     border-radius: 7px; padding: 6px 10px; font-size: 12.5px; z-index: 10; display: none;
@@ -165,17 +189,16 @@
   }
 
   .msgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
-  .msg { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .msg { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; }
   .msg .who { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .msg .who b { font-size: 14px; }
   .msg .when { color: var(--muted); font-size: 12px; margin-inline-start: auto; }
-  .msg p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-2); }
+  .msg p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-2); flex: 1; }
   .msg .order-ref { font-size: 12px; color: var(--accent); font-weight: 600; }
+  .msg .actions { display: flex; margin-top: 10px; }
 
   footer { margin-top: 34px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--grid); padding-top: 14px; }
-  @media (prefers-reduced-motion: no-preference) {
-    .alert, .kpi, .msg { transition: border-color 0.15s ease; }
-  }
+  @media (prefers-reduced-motion: reduce) { .caret { transition: none; } }
 </style>
 
 <div class="wrap" dir="rtl" lang="he">
@@ -188,11 +211,12 @@
   <section class="kpis" id="kpis" aria-label="מדדים עיקריים"></section>
 
   <h2>דורש טיפול עכשיו</h2>
-  <p class="h2-note">בעיות פתוחות שזוהו מההזמנות בשופיפיי ומהודעות לקוחות בג'ימייל, לפי דחיפות</p>
+  <p class="h2-note">בעיות פתוחות מההזמנות בשופיפיי ומהודעות לקוחות בג'ימייל · לחצו "טופל ✓" כדי להסיר בעיה שטופלה (נשמר בדפדפן זה)</p>
   <section class="alerts" id="alerts"></section>
+  <div class="resolved-bar" id="alerts-resolved-bar"></div>
 
   <h2>כל ההזמנות</h2>
-  <p class="h2-note">50 ההזמנות האחרונות · לחיצה על מספר מעקב פותחת את אתר חברת השילוח</p>
+  <p class="h2-note">לחיצה על שורה פותחת פירוט פריטים: מחיר רגיל, הנחה ומחיר ששולם · קישורי המעקב פותחים את אתר חברת השילוח</p>
   <div class="controls" id="filters" role="group" aria-label="סינון הזמנות">
     <input class="search" id="search" type="search" placeholder="חיפוש לפי לקוח או מס' הזמנה…" aria-label="חיפוש" />
   </div>
@@ -216,75 +240,84 @@
   </div>
 
   <h2>הודעות לקוחות ללא מענה</h2>
-  <p class="h2-note">הודעות שהגיעו לג'ימייל (Shopify Inbox) וטרם נענו — מהחודש האחרון</p>
+  <p class="h2-note">הודעות שהגיעו לג'ימייל (Shopify Inbox) וטרם נענו — מהחודש האחרון · אחרי שעניתם, לחצו "טופל ✓"</p>
   <section class="msgs" id="msgs"></section>
+  <div class="resolved-bar" id="msgs-resolved-bar"></div>
 
   <footer>
-    מקורות: Shopify Admin (inn7fashion.com) · Gmail (tal.t@inn7-fashion.com) · הדשבורד מתעדכן אוטומטית כל 6 שעות.
+    מקורות: Shopify Admin (inn7fashion.com) · Gmail (tal.t@inn7-fashion.com) · הדשבורד מתעדכן אוטומטית כל 6 שעות; סימוני "טופל" נשמרים בדפדפן זה ושורדים רענונים.
     <br />התראות לוגיסטיקה נוספות מהמייל: חוב פדקס בסך ‏₪109,286 בטיפול מול קרן אלעזר (7.7) · משלוח היבוא ב‑DHL ‏2189102591 שוחרר מהמכס לאחר תשלום החוב (5.7).
   </footer>
 </div>
 <div id="tooltip" dir="rtl"></div>
 
 <script>
-const ORDERS = [{"n":"#10305","d":"2026-07-08T13:32:29Z","c":"Tribula Schweiz","co":"Switzerland","t":1038.14,"fin":"AUTHORIZED","ful":"UNFULFILLED","cr":null,"ship":[],"ref":0,"it":"Modal Jersey T-Shirt","iq":7},{"n":"#10304","d":"2026-07-07T14:07:53Z","c":"Corrado Gerosa","co":"Italy","t":820.8,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"874093229598","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874093229598"}],"ref":0,"it":"Garment-Dyed Vegetable-Tanned Collarless Biker Jacket","iq":1},{"n":"#10303","d":"2026-07-07T11:14:23Z","c":"Michael Geschwentner","co":"Switzerland","t":354.57,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"874092637101","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874092637101"}],"ref":0,"it":"Crinkled Cotton Drop-Crotch Cropped Pants","iq":1},{"n":"#10302","d":"2026-07-07T06:16:58Z","c":"Anna Gladska","co":"","t":124.22,"fin":"AUTHORIZED","ful":"UNFULFILLED","cr":null,"ship":[],"ref":0,"it":"Top Bronze","iq":1},{"n":"#10301","d":"2026-07-07T01:37:55Z","c":"Yasushi Nakamura","co":"Japan","t":125.09,"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","ship":[],"ref":125.09,"it":"Raw Edge Rib T-Shirt","iq":1},{"n":"#10300","d":"2026-07-06T01:38:21Z","c":"Yasushi Nakamura","co":"Japan","t":431.44,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"5617325302","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5617325302"}],"ref":0.0,"it":"Stitch Jersey T-Shirt","iq":4},{"n":"#10299","d":"2026-07-05T22:06:39Z","c":"Gemma Galeno","co":"Netherlands","t":350.0,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"874035642928","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035642928"},{"s":"IN_TRANSIT","tn":"874035642928","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035642928"}],"ref":0,"it":"TTSWTRS Printed short","iq":2},{"n":"#10298","d":"2026-07-05T14:43:47Z","c":"Gerhard Planner","co":"Austria","t":532.0,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"874035089632","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035089632"}],"ref":0,"it":"Object-Dyed Leather Crossbody Pouch","iq":1},{"n":"#10297","d":"2026-07-05T03:55:59Z","c":"Stacy Chisolm","co":"United States","t":187.95,"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","ship":[],"ref":187.95,"it":"Gauze Wool Turtleneck with Central Spine Seam","iq":1},{"n":"#10296","d":"2026-07-04T08:26:34Z","c":"Tom Hagemeyer","co":"Germany","t":98.72,"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","ship":[],"ref":98.72,"it":"F.ZIPPED JACKET","iq":1},{"n":"#10295","d":"2026-07-03T13:29:21Z","c":"Paul Lewis","co":"Switzerland","t":415.27,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"8630523543","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630523543"}],"ref":0,"it":"Brushed Cashmere-Silk Boat Neck Pullover","iq":1},{"n":"#10294","d":"2026-07-02T23:12:53Z","c":"Heiko Ruell","co":"Germany","t":226.2,"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","ship":[],"ref":226.2,"it":"Matmix Linen-Patch Trousers","iq":1},{"n":"#10293","d":"2026-07-02T22:31:10Z","c":"RICHARD HONG","co":"United States","t":480.15,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"7981280801","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=7981280801"},{"s":"IN_TRANSIT","tn":"873920354745","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873920354745"}],"ref":0,"it":"Linen Blend Insert T-Shirt","iq":6},{"n":"#10292","d":"2026-07-02T19:16:05Z","c":"Clement Ka Chi Lai","co":"Hong Kong","t":1191.86,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"8630539481","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630539481"},{"s":"IN_TRANSIT","tn":"873920875758","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873920875758"}],"ref":0,"it":"Devoré Lentigginoso Shirt","iq":7},{"n":"#10291","d":"2026-07-02T14:40:39Z","c":"Thomas Gayet","co":"France","t":499.32,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"OUT_FOR_DELIVERY","tn":"5994339956","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5994339956"}],"ref":0,"it":"Garment-Washed Wide Leg Trousers","iq":3},{"n":"#10290","d":"2026-07-02T10:26:56Z","c":"Sługocki Mariusz","co":"Poland","t":199.28,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873872313420","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873872313420"}],"ref":0,"it":"Cotton Terry Shorts with Layered Raw Hem","iq":1},{"n":"#10289","d":"2026-07-01T20:12:45Z","c":"Hans-Christian Vej","co":"Denmark","t":302.77,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"8630579996","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630579996"},{"s":"IN_TRANSIT","tn":"873919501294","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873919501294"}],"ref":0,"it":"Ribbed Tank Top","iq":2},{"n":"#10288","d":"2026-07-01T17:37:14Z","c":"Taylor Olmstead","co":"United States","t":288.18,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"ATTEMPTED_DELIVERY","tn":"8526854770","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8526854770"}],"ref":0,"it":"Low-Crotch Linen Trousers","iq":1},{"n":"#10287","d":"2026-07-01T11:44:59Z","c":"Mag. Guido Jaklitsch","co":"Austria","t":514.4,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELAYED","tn":"5994344856","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=5994344856"}],"ref":0.0,"it":"Linen-Cotton Bucket Hat","iq":3},{"n":"#10286","d":"2026-07-01T06:49:27Z","c":"KITAZATO HARUKATSU","co":"Japan","t":306.61,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"6113509496","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6113509496"}],"ref":0,"it":"Frayed Edge Cotton Blazer","iq":1},{"n":"#10285","d":"2026-06-29T20:31:11Z","c":"Sito Morillo Peña","co":"Spain","t":215.0,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"3322854511","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3322854511"}],"ref":0,"it":"Asymmetric Raw-Edge Cotton Longline T-Shirt","iq":1},{"n":"#10284","d":"2026-06-29T17:34:26Z","c":"Tribula Schweiz","co":"Switzerland","t":834.24,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"6113518132","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6113518132"}],"ref":0,"it":"Matmix Linen-Patch Trousers","iq":5},{"n":"#10283","d":"2026-06-29T16:27:49Z","c":"David Bitsadze","co":"United States","t":95.42,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"3322885042","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3322885042"}],"ref":0,"it":"T-SHIRT","iq":1},{"n":"#10282","d":"2026-06-29T07:41:35Z","c":"Alco Ho","co":"Hong Kong","t":1041.11,"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","ship":[],"ref":1041.11,"it":"Lutalo Equine Leather Jacket - Black","iq":1},{"n":"#10281","d":"2026-06-29T06:09:09Z","c":"Michael Geschwentner","co":"Switzerland","t":422.85,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873752433062","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873752433062"},{"s":"DELIVERED","tn":"5196680075","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5196680075"}],"ref":0,"it":"Elongated Cotton Tee with Raw-Effect Hem","iq":3},{"n":"#10280","d":"2026-06-27T22:33:56Z","c":"Vladimir Kravcenko","co":"Estonia","t":598.86,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELAYED","tn":"873751636108","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873751636108"},{"s":"OUT_FOR_DELIVERY","tn":"2750064704","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=2750064704"}],"ref":0,"it":"Lightweight Swim Shorts","iq":4},{"n":"#10279","d":"2026-06-26T20:51:00Z","c":"Josiene Jessurun","co":"Netherlands","t":405.0,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"3633246536","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3633246536"}],"ref":0,"it":"Reversible Faux Fur Hooded Maxi Coat","iq":1},{"n":"#10278","d":"2026-06-26T17:05:43Z","c":"Anton Ponomarev","co":"United States","t":440.26,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"9607692312","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=9607692312"}],"ref":0.0,"it":"Laminate-Finished Ribbed Cotton Pullover","iq":2},{"n":"#10277","d":"2026-06-26T16:00:18Z","c":"Tracey Wallis","co":"Canada","t":144.63,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"3633235815","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3633235815"}],"ref":0,"it":"Micro-Patterned Low Crotch Trousers","iq":1},{"n":"#10276","d":"2026-06-25T23:28:19Z","c":"Sehoon Park","co":"Germany","t":74.75,"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","ship":[],"ref":74.75,"it":"Matmix Shorts","iq":1},{"n":"#10275","d":"2026-06-25T20:14:00Z","c":"Andrew Thurber","co":"United States","t":968.2,"fin":"PAID","ful":"UNFULFILLED","cr":null,"ship":[],"ref":0,"it":"THE SUMMIT RING","iq":1},{"n":"#10274","d":"2026-06-25T10:32:10Z","c":"Олександр Керницький","co":"Poland","t":231.1,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"1726883491","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=1726883491"}],"ref":0,"it":"Tapered Stretch Denim Trousers","iq":1},{"n":"#10273","d":"2026-06-25T07:00:15Z","c":"Moreno Veronesi","co":"Italy","t":197.5,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"5322938784","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5322938784"}],"ref":0,"it":"Drop-Crotch Pants","iq":1},{"n":"#10272","d":"2026-06-24T13:04:10Z","c":"Momiok Francis","co":"France","t":217.0,"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","ship":[],"ref":217.0,"it":"Round Neck Slim Fit Shirt","iq":2},{"n":"#10271","d":"2026-06-24T09:06:50Z","c":"michael kimche","co":"France","t":1076.6,"fin":"PARTIALLY_REFUNDED","ful":"FULFILLED","cr":null,"ship":[{"s":"FULFILLED","tn":"1","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=1"}],"ref":490.0,"it":"SISTEMA RING","iq":4},{"n":"#10270","d":"2026-06-23T22:28:20Z","c":"Galina Shcherbakova","co":"France","t":217.5,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"9506076296","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=9506076296"}],"ref":0,"it":"Spray-Dyed Wool Harem Knit Pants","iq":1},{"n":"#10269","d":"2026-06-23T06:12:09Z","c":"Michael Miller","co":"United States","t":499.87,"fin":"VOIDED","ful":"UNFULFILLED","cr":"OTHER","ship":[],"ref":499.87,"it":"Quilted Nylon Puffer Jacket","iq":1},{"n":"#10268","d":"2026-06-23T04:12:44Z","c":"Mihaela Damian","co":"Romania","t":219.4,"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","ship":[],"ref":219.4,"it":"Ring with Split Raw Front and Diamonds","iq":1},{"n":"#10267","d":"2026-06-22T20:14:29Z","c":"bo de kriek","co":"Netherlands","t":234.2,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"6204072173","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6204072173"}],"ref":0,"it":"Technical Drop Crotch Shorts","iq":1},{"n":"#10266","d":"2026-06-22T13:49:24Z","c":"Adam Varga","co":"United Kingdom","t":648.58,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873546096352","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873546096352"},{"s":"DELIVERED","tn":"3874449294","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3874449294"}],"ref":0.0,"it":"Ribbed Tank Top","iq":6},{"n":"#10265","d":"2026-06-21T04:55:56Z","c":"Iris Chen","co":"Japan","t":327.43,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"5420150890","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5420150890"}],"ref":0.0,"it":"Middle high socks","iq":4},{"n":"#10264","d":"2026-06-20T20:10:00Z","c":"Ivan Romportl","co":"Czech Republic","t":125.28,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873429169920","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873429169920"},{"s":"DELIVERED","tn":"2343056516","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=2343056516"}],"ref":0,"it":"Pigment-Dyed Cotton Longline T-Shirt","iq":2},{"n":"#10263","d":"2026-06-20T14:59:24Z","c":"Denys Kanel","co":"United States","t":556.99,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"5420127020","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=5420127020"}],"ref":0.0,"it":"Matmix Cargo Trousers","iq":4},{"n":"#10262","d":"2026-06-19T22:24:01Z","c":"Seow  Hui Yeoh","co":"United States","t":7478.36,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"IN_TRANSIT","tn":"873427352191","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873427352191"},{"s":"DELAYED","tn":"4116530316","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=4116530316"}],"ref":0.0,"it":"Asymmetric Linen Tee","iq":10},{"n":"#10261","d":"2026-06-19T17:20:17Z","c":"Bram Tihany","co":"United States","t":218.19,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELAYED","tn":"7123731845","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=7123731845"}],"ref":0,"it":"Drop-Crotch Pants","iq":1},{"n":"#10260","d":"2026-06-19T15:15:18Z","c":"Irakli Nikatchadze","co":"United States","t":417.18,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873429578031","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873429578031"}],"ref":0.0,"it":"Silk Button-Up Shirt","iq":2},{"n":"#10259","d":"2026-06-19T08:59:08Z","c":"Lily Ross","co":"New Zealand","t":1058.33,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"2019799655","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=2019799655"},{"s":"DELIVERED","tn":"873544882539","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873544882539"}],"ref":0.0,"it":"Sponge-Dyed Light Wool Pullover with Destroy Seam","iq":6},{"n":"#10258","d":"2026-06-19T08:18:53Z","c":"Sergiu Doru","co":"Romania","t":1100.7,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873424004078","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873424004078"},{"s":"DELIVERED","tn":"4828074123","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=4828074123"},{"s":"CANCELED","tn":"4828074123","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=4828074123"}],"ref":0,"it":"Staple 69 Micro Ondes Organic Cotton T-Shirt — Black","iq":7},{"n":"#10257","d":"2026-06-19T06:43:48Z","c":"Hiroaki Takada","co":"Japan","t":1034.44,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"873425266262","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873425266262"},{"s":"DELIVERED","tn":"5779926305","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5779926305"}],"ref":0.0,"it":"Open-Knit Cotton Drop-Crotch Shorts","iq":7},{"n":"#10256","d":"2026-06-18T21:59:26Z","c":"Robert Hrdlicka","co":"Czech Republic","t":509.93,"fin":"PAID","ful":"FULFILLED","cr":null,"ship":[{"s":"DELIVERED","tn":"7123722270","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=7123722270"}],"ref":0,"it":"Loose-Fit Trousers","iq":2}];
+const ORDERS = [{"n":"#10305","d":"2026-07-08T13:32:29Z","c":"Tribula Schweiz","co":"Switzerland","t":1038.14,"sub":1038.14,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"AUTHORIZED","ful":"UNFULFILLED","cr":null,"cancelled":false,"ship":[],"ref":0,"items":[{"t":"Modal Jersey T-Shirt","v":"M","q":1,"po":81.36,"pd":81.36},{"t":"Modal Jersey T-Shirt","v":"M","q":1,"po":81.36,"pd":81.36},{"t":"Brushed Cashmere-Silk Boat Neck Pullover","v":"M","q":1,"po":461.04,"pd":461.04},{"t":"Silk Blend V-Neck T-Shirt","v":"M","q":2,"po":88.95,"pd":88.95},{"t":"Silk Blend V-Neck T-Shirt","v":"M","q":1,"po":88.95,"pd":88.95},{"t":"Colubro Horse Leather Belt - Milk","v":"O.S","q":1,"po":147.53,"pd":147.53}]},{"n":"#10304","d":"2026-07-07T14:07:53Z","c":"Corrado Gerosa","co":"Italy","t":820.8,"sub":820.8,"disc":91.2,"shipc":0.0,"dcodes":["W4VWZ7T8"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"874093229598","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874093229598"}],"ref":0,"items":[{"t":"Garment-Dyed Vegetable-Tanned Collarless Biker Jacket","v":"54","q":1,"po":912.0,"pd":912.0}]},{"n":"#10303","d":"2026-07-07T11:14:23Z","c":"Michael Geschwentner","co":"Switzerland","t":354.57,"sub":318.79,"disc":0.0,"shipc":35.78,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"874092637101","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874092637101"}],"ref":0,"items":[{"t":"Crinkled Cotton Drop-Crotch Cropped Pants","v":"L","q":1,"po":318.79,"pd":318.79}]},{"n":"#10302","d":"2026-07-07T06:16:58Z","c":"Anna Gladska","co":"","t":124.22,"sub":124.22,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"AUTHORIZED","ful":"UNFULFILLED","cr":null,"cancelled":false,"ship":[],"ref":0,"items":[{"t":"Top Bronze","v":"S","q":1,"po":124.22,"pd":124.22}]},{"n":"#10301","d":"2026-07-07T01:37:55Z","c":"Yasushi Nakamura","co":"Japan","t":125.09,"sub":73.87,"disc":0.0,"shipc":51.22,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","cancelled":true,"ship":[],"ref":125.09,"items":[{"t":"Raw Edge Rib T-Shirt","v":"XS","q":1,"po":73.87,"pd":73.87}]},{"n":"#10300","d":"2026-07-06T01:38:21Z","c":"Yasushi Nakamura","co":"Japan","t":431.44,"sub":431.44,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"5617325302","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5617325302"}],"ref":0.0,"items":[{"t":"Stitch Jersey T-Shirt","v":"XS","q":1,"po":65.5,"pd":65.5},{"t":"Linen Blend Insert T-Shirt","v":"XS","q":1,"po":81.2,"pd":81.2},{"t":"Panel Jersey T-Shirt","v":"XS","q":1,"po":81.2,"pd":81.2},{"t":"Slim Fit Denim Trousers","v":"XS","q":1,"po":203.54,"pd":203.54}]},{"n":"#10299","d":"2026-07-05T22:06:39Z","c":"Gemma Galeno","co":"Netherlands","t":350.0,"sub":315.0,"disc":35.0,"shipc":35.0,"dcodes":["PS7556SR"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"874035642928","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035642928"},{"s":"IN_TRANSIT","tn":"874035642928","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035642928"}],"ref":0,"items":[{"t":"TTSWTRS Printed short","v":"S","q":1,"po":150.0,"pd":150.0},{"t":"Mesh Bodysuit Berlin","v":"M","q":1,"po":200.0,"pd":200.0}]},{"n":"#10298","d":"2026-07-05T14:43:47Z","c":"Gerhard Planner","co":"Austria","t":532.0,"sub":532.0,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"874035089632","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=874035089632"}],"ref":0,"items":[{"t":"Object-Dyed Leather Crossbody Pouch","v":"O.S","q":1,"po":532.0,"pd":532.0}]},{"n":"#10297","d":"2026-07-05T03:55:59Z","c":"Stacy Chisolm","co":"United States","t":187.95,"sub":136.37,"disc":0.0,"shipc":51.58,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","cancelled":true,"ship":[],"ref":187.95,"items":[{"t":"Gauze Wool Turtleneck with Central Spine Seam","v":"M","q":1,"po":136.37,"pd":136.37}]},{"n":"#10296","d":"2026-07-04T08:26:34Z","c":"Tom Hagemeyer","co":"Germany","t":98.72,"sub":63.72,"disc":7.08,"shipc":35.0,"dcodes":["5WMDLLHK"],"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","cancelled":true,"ship":[],"ref":98.72,"items":[{"t":"F.ZIPPED JACKET","v":"52","q":1,"po":70.8,"pd":70.8}]},{"n":"#10295","d":"2026-07-03T13:29:21Z","c":"Paul Lewis","co":"Switzerland","t":415.27,"sub":415.27,"disc":46.14,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"8630523543","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630523543"}],"ref":0,"items":[{"t":"Brushed Cashmere-Silk Boat Neck Pullover","v":"L","q":1,"po":461.41,"pd":415.27}]},{"n":"#10294","d":"2026-07-02T23:12:53Z","c":"Heiko Ruell","co":"Germany","t":226.2,"sub":191.2,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","cancelled":true,"ship":[],"ref":226.2,"items":[{"t":"Matmix Linen-Patch Trousers","v":"S","q":1,"po":191.2,"pd":191.2}]},{"n":"#10293","d":"2026-07-02T22:31:10Z","c":"RICHARD HONG","co":"United States","t":480.15,"sub":480.15,"disc":53.35,"shipc":0.0,"dcodes":["RICHARD10"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"7981280801","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=7981280801"},{"s":"IN_TRANSIT","tn":"873920354745","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873920354745"}],"ref":0,"items":[{"t":"Linen Blend Insert T-Shirt","v":"M","q":1,"po":89.21,"pd":89.21},{"t":"Long Sleeve T-Shirt with Vertical Leather Insert","v":"M","q":1,"po":134.69,"pd":134.69},{"t":"Panel Jersey T-Shirt","v":"M","q":2,"po":81.34,"pd":81.34},{"t":"Raw Edge Rib T-Shirt","v":"M","q":2,"po":73.46,"pd":73.46}]},{"n":"#10292","d":"2026-07-02T19:16:05Z","c":"Clement Ka Chi Lai","co":"Hong Kong","t":1191.86,"sub":1191.86,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"8630539481","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630539481"},{"s":"IN_TRANSIT","tn":"873920875758","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873920875758"}],"ref":0,"items":[{"t":"Devoré Lentigginoso Shirt","v":"42","q":1,"po":563.16,"pd":563.16},{"t":"Xacus Slim Fit Cotton Poplin Shirt Buttermilk Yellow","v":"38","q":1,"po":64.09,"pd":64.09},{"t":"Ribbed T-shirt","v":"1","q":1,"po":79.44,"pd":79.44},{"t":"Ribbed T-shirt","v":"1","q":1,"po":79.44,"pd":79.44},{"t":"Distressed Knit Cotton Top","v":"M","q":1,"po":258.27,"pd":258.27},{"t":"Raw Edge Rib T-Shirt","v":"XS","q":1,"po":73.73,"pd":73.73},{"t":"Viscose Raw Edge T-Shirt","v":"XS","q":1,"po":73.73,"pd":73.73}]},{"n":"#10291","d":"2026-07-02T14:40:39Z","c":"Thomas Gayet","co":"France","t":499.32,"sub":499.32,"disc":55.48,"shipc":0.0,"dcodes":["4LLWHSSJ"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"OUT_FOR_DELIVERY","tn":"5994339956","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5994339956"}],"ref":0,"items":[{"t":"Garment-Washed Wide Leg Trousers","v":"L","q":1,"po":167.3,"pd":167.3},{"t":"PLANE RING","v":"10J","q":1,"po":165.0,"pd":165.0},{"t":"CHASM RING","v":"10J","q":1,"po":222.5,"pd":222.5}]},{"n":"#10290","d":"2026-07-02T10:26:56Z","c":"Sługocki Mariusz","co":"Poland","t":199.28,"sub":163.39,"disc":0.0,"shipc":35.89,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873872313420","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873872313420"}],"ref":0,"items":[{"t":"Cotton Terry Shorts with Layered Raw Hem","v":"XL","q":1,"po":163.39,"pd":163.39}]},{"n":"#10289","d":"2026-07-01T20:12:45Z","c":"Hans-Christian Vej","co":"Denmark","t":302.77,"sub":267.05,"disc":0.0,"shipc":35.72,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"8630579996","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8630579996"},{"s":"IN_TRANSIT","tn":"873919501294","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873919501294"}],"ref":0,"items":[{"t":"Ribbed Tank Top","v":"4","q":1,"po":63.82,"pd":63.82},{"t":"Technical Drop Crotch Shorts","v":"L","q":1,"po":203.23,"pd":203.23}]},{"n":"#10288","d":"2026-07-01T17:37:14Z","c":"Taylor Olmstead","co":"United States","t":288.18,"sub":236.34,"disc":0.0,"shipc":51.84,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"ATTEMPTED_DELIVERY","tn":"8526854770","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=8526854770"}],"ref":0,"items":[{"t":"Low-Crotch Linen Trousers","v":"L","q":1,"po":236.34,"pd":236.34}]},{"n":"#10287","d":"2026-07-01T11:44:59Z","c":"Mag. Guido Jaklitsch","co":"Austria","t":514.4,"sub":479.4,"disc":16.0,"shipc":35.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELAYED","tn":"5994344856","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=5994344856"}],"ref":0.0,"items":[{"t":"Linen-Cotton Bucket Hat","v":"L","q":1,"po":161.0,"pd":161.0},{"t":"Matmix Terry Shorts","v":"M","q":1,"po":159.2,"pd":159.2},{"t":"Matmix Drop-Crotch Shorts","v":"M","q":1,"po":175.2,"pd":159.2}]},{"n":"#10286","d":"2026-07-01T06:49:27Z","c":"KITAZATO HARUKATSU","co":"Japan","t":306.61,"sub":255.42,"disc":0.0,"shipc":51.19,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"6113509496","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6113509496"}],"ref":0,"items":[{"t":"Frayed Edge Cotton Blazer","v":"M","q":1,"po":255.42,"pd":255.42}]},{"n":"#10285","d":"2026-06-29T20:31:11Z","c":"Sito Morillo Peña","co":"Spain","t":215.0,"sub":180.0,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"3322854511","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3322854511"}],"ref":0,"items":[{"t":"Asymmetric Raw-Edge Cotton Longline T-Shirt","v":"XL","q":1,"po":180.0,"pd":180.0}]},{"n":"#10284","d":"2026-06-29T17:34:26Z","c":"Tribula Schweiz","co":"Switzerland","t":834.24,"sub":834.24,"disc":92.69,"shipc":0.0,"dcodes":["VNSS34GM"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"6113518132","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6113518132"}],"ref":0,"items":[{"t":"Matmix Linen-Patch Trousers","v":"M","q":1,"po":187.57,"pd":187.57},{"t":"Stitch Jersey T-Shirt","v":"M","q":1,"po":66.14,"pd":66.14},{"t":"Stitch Jersey T-Shirt","v":"M","q":1,"po":66.14,"pd":66.14},{"t":"Matmix Terry Shorts","v":"M","q":1,"po":146.37,"pd":146.37},{"t":"Brushed Cashmere-Silk Boat Neck Pullover","v":"L","q":1,"po":460.71,"pd":460.71}]},{"n":"#10283","d":"2026-06-29T16:27:49Z","c":"David Bitsadze","co":"United States","t":95.42,"sub":43.77,"disc":0.0,"shipc":51.65,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"3322885042","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3322885042"}],"ref":0,"items":[{"t":"T-SHIRT","v":"5","q":1,"po":43.77,"pd":43.77}]},{"n":"#10282","d":"2026-06-29T07:41:35Z","c":"Alco Ho","co":"Hong Kong","t":1041.11,"sub":1041.11,"disc":115.68,"shipc":0.0,"dcodes":["876V67XW"],"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","cancelled":true,"ship":[],"ref":1041.11,"items":[{"t":"Lutalo Equine Leather Jacket - Black","v":"52","q":1,"po":1156.79,"pd":1156.79}]},{"n":"#10281","d":"2026-06-29T06:09:09Z","c":"Michael Geschwentner","co":"Switzerland","t":422.85,"sub":422.85,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873752433062","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873752433062"},{"s":"DELIVERED","tn":"5196680075","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5196680075"}],"ref":0,"items":[{"t":"Elongated Cotton Tee with Raw-Effect Hem","v":"L","q":2,"po":140.95,"pd":140.95},{"t":"Raw-Hem Elongated Cotton Tee","v":"L","q":1,"po":140.95,"pd":140.95}]},{"n":"#10280","d":"2026-06-27T22:33:56Z","c":"Vladimir Kravcenko","co":"Estonia","t":598.86,"sub":598.86,"disc":66.54,"shipc":0.0,"dcodes":["JGSNVTF8"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELAYED","tn":"873751636108","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873751636108"},{"s":"OUT_FOR_DELIVERY","tn":"2750064704","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=2750064704"}],"ref":0,"items":[{"t":"Lightweight Swim Shorts","v":"M","q":1,"po":244.0,"pd":244.0},{"t":"Textured Drop-Crotch Shorts","v":"2","q":1,"po":95.0,"pd":95.0},{"t":"Matmix Drop-Crotch Shorts","v":"M","q":1,"po":175.2,"pd":175.2},{"t":"Jersey Trousers","v":"M","q":1,"po":151.2,"pd":151.2}]},{"n":"#10279","d":"2026-06-26T20:51:00Z","c":"Josiene Jessurun","co":"Netherlands","t":405.0,"sub":405.0,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"3633246536","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3633246536"}],"ref":0,"items":[{"t":"Reversible Faux Fur Hooded Maxi Coat","v":"L","q":1,"po":405.0,"pd":405.0}]},{"n":"#10278","d":"2026-06-26T17:05:43Z","c":"Anton Ponomarev","co":"United States","t":440.26,"sub":440.26,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"9607692312","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=9607692312"}],"ref":0.0,"items":[{"t":"Laminate-Finished Ribbed Cotton Pullover","v":"L","q":1,"po":240.3,"pd":240.3},{"t":"Officine Creative Berge L-Zip Leather Wallet Black","v":"O.S","q":1,"po":199.96,"pd":199.96}]},{"n":"#10277","d":"2026-06-26T16:00:18Z","c":"Tracey Wallis","co":"Canada","t":144.63,"sub":93.33,"disc":0.0,"shipc":51.3,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"3633235815","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3633235815"}],"ref":0,"items":[{"t":"Micro-Patterned Low Crotch Trousers","v":"0","q":1,"po":93.33,"pd":93.33}]},{"n":"#10276","d":"2026-06-25T23:28:19Z","c":"Sehoon Park","co":"Germany","t":74.75,"sub":39.75,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","cancelled":true,"ship":[],"ref":74.75,"items":[{"t":"Matmix Shorts","v":"M","q":1,"po":39.75,"pd":39.75}]},{"n":"#10275","d":"2026-06-25T20:14:00Z","c":"Andrew Thurber","co":"United States","t":968.2,"sub":968.2,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"UNFULFILLED","cr":null,"cancelled":false,"ship":[],"ref":0,"items":[{"t":"THE SUMMIT RING","v":"IT 26 / EU 66 / US 11 1/2","q":1,"po":968.2,"pd":968.2}]},{"n":"#10274","d":"2026-06-25T10:32:10Z","c":"Олександр Керницький","co":"Poland","t":231.1,"sub":195.19,"disc":0.0,"shipc":35.91,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"1726883491","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=1726883491"}],"ref":0,"items":[{"t":"Tapered Stretch Denim Trousers","v":"L","q":1,"po":195.19,"pd":195.19}]},{"n":"#10273","d":"2026-06-25T07:00:15Z","c":"Moreno Veronesi","co":"Italy","t":197.5,"sub":162.5,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"5322938784","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5322938784"}],"ref":0,"items":[{"t":"Drop-Crotch Pants","v":"L","q":1,"po":162.5,"pd":162.5}]},{"n":"#10272","d":"2026-06-24T13:04:10Z","c":"Momiok Francis","co":"France","t":217.0,"sub":182.0,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"CUSTOMER","cancelled":true,"ship":[],"ref":217.0,"items":[{"t":"Round Neck Slim Fit Shirt","v":"XXL","q":1,"po":49.5,"pd":49.5},{"t":"Wide-Leg Cargo Shorts","v":"XL","q":1,"po":132.5,"pd":132.5}]},{"n":"#10271","d":"2026-06-24T09:06:50Z","c":"michael kimche","co":"France","t":1076.6,"sub":1076.6,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PARTIALLY_REFUNDED","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"FULFILLED","tn":"1","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=1"}],"ref":490.0,"items":[{"t":"SISTEMA RING","v":"10J","q":1,"po":490.0,"pd":490.0},{"t":"Textured Velvet Tailored Blazer","v":"48","q":1,"po":265.0,"pd":265.0},{"t":"Layered Hem T-Shirt","v":"2","q":1,"po":120.0,"pd":120.0},{"t":"Shredded Jacquard Longline Blazer","v":"48","q":1,"po":201.6,"pd":201.6}]},{"n":"#10270","d":"2026-06-23T22:28:20Z","c":"Galina Shcherbakova","co":"France","t":217.5,"sub":182.5,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"9506076296","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=9506076296"}],"ref":0,"items":[{"t":"Spray-Dyed Wool Harem Knit Pants","v":"L","q":1,"po":182.5,"pd":182.5}]},{"n":"#10269","d":"2026-06-23T06:12:09Z","c":"Michael Miller","co":"United States","t":499.87,"sub":499.87,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"VOIDED","ful":"UNFULFILLED","cr":"OTHER","cancelled":true,"ship":[],"ref":499.87,"items":[{"t":"Quilted Nylon Puffer Jacket","v":"L","q":1,"po":499.87,"pd":499.87}]},{"n":"#10268","d":"2026-06-23T04:12:44Z","c":"Mihaela Damian","co":"Romania","t":219.4,"sub":183.7,"disc":20.41,"shipc":35.7,"dcodes":["WXZ3T2X8"],"fin":"VOIDED","ful":"UNFULFILLED","cr":"INVENTORY","cancelled":true,"ship":[],"ref":219.4,"items":[{"t":"Ring with Split Raw Front and Diamonds","v":"26","q":1,"po":204.11,"pd":204.11}]},{"n":"#10267","d":"2026-06-22T20:14:29Z","c":"bo de kriek","co":"Netherlands","t":234.2,"sub":199.2,"disc":0.0,"shipc":35.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"6204072173","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=6204072173"}],"ref":0,"items":[{"t":"Technical Drop Crotch Shorts","v":"M","q":1,"po":199.2,"pd":199.2}]},{"n":"#10266","d":"2026-06-22T13:49:24Z","c":"Adam Varga","co":"United Kingdom","t":648.58,"sub":648.58,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873546096352","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873546096352"},{"s":"DELIVERED","tn":"3874449294","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=3874449294"}],"ref":0.0,"items":[{"t":"Ribbed Tank Top","v":"L","q":1,"po":65.99,"pd":65.99},{"t":"Stitch Jersey T-Shirt","v":"L","q":1,"po":65.99,"pd":65.99},{"t":"Staple 69 Organic Cotton T-Shirt","v":"L","q":1,"po":122.71,"pd":122.71},{"t":"Staple 69 Linen Jersey T-Shirt","v":"L","q":1,"po":159.76,"pd":159.76},{"t":"Industrial Cotton Jersey with Rubberized Spine","v":"L","q":1,"po":112.29,"pd":112.29},{"t":"Staple 69 Organic Cotton T-Shirt","v":"L","q":1,"po":121.84,"pd":121.84}]},{"n":"#10265","d":"2026-06-21T04:55:56Z","c":"Iris Chen","co":"Japan","t":327.43,"sub":276.1,"disc":0.0,"shipc":51.33,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"5420150890","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5420150890"}],"ref":0.0,"items":[{"t":"Middle high socks","v":"L-XL","q":1,"po":20.53,"pd":20.53},{"t":"Middle high socks","v":"S-M","q":1,"po":20.53,"pd":20.53},{"t":"Shirt Dress with Oversized Pockets","v":"L","q":1,"po":164.26,"pd":164.26},{"t":"Thom Krom Padded Technical Nylon Zip Skirt Black","v":"M","q":1,"po":70.78,"pd":70.78}]},{"n":"#10264","d":"2026-06-20T20:10:00Z","c":"Ivan Romportl","co":"Czech Republic","t":125.28,"sub":89.57,"disc":0.0,"shipc":35.71,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873429169920","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873429169920"},{"s":"DELIVERED","tn":"2343056516","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=2343056516"}],"ref":0,"items":[{"t":"Pigment-Dyed Cotton Longline T-Shirt","v":"XXXL","q":1,"po":46.21,"pd":46.21},{"t":"T-SHIRT","v":"5","q":1,"po":43.36,"pd":43.36}]},{"n":"#10263","d":"2026-06-20T14:59:24Z","c":"Denys Kanel","co":"United States","t":556.99,"sub":556.99,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"5420127020","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=5420127020"}],"ref":0.0,"items":[{"t":"Matmix Cargo Trousers","v":"L","q":1,"po":179.56,"pd":179.56},{"t":"Nylon Swim Shorts","v":"L","q":1,"po":122.03,"pd":122.03},{"t":"Ribbed Tank Top","v":"L","q":1,"po":74.09,"pd":74.09},{"t":"JACKET","v":"52","q":1,"po":181.31,"pd":181.31}]},{"n":"#10262","d":"2026-06-19T22:24:01Z","c":"Seow  Hui Yeoh","co":"United States","t":7478.36,"sub":7478.36,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"IN_TRANSIT","tn":"873427352191","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873427352191"},{"s":"DELAYED","tn":"4116530316","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=4116530316"}],"ref":0.0,"items":[{"t":"Asymmetric Linen Tee","v":"M","q":1,"po":306.8,"pd":306.8},{"t":"Thom Krom High-Rise Paneled Leggings Black","v":"S","q":1,"po":46.2,"pd":46.2},{"t":"Long Alpaca Cardigan","v":"M","q":1,"po":285.01,"pd":285.01},{"t":"Relaxed Wool Trousers","v":"M","q":1,"po":213.54,"pd":213.54},{"t":"Hand-Painted Cotton Hoodie","v":"L","q":1,"po":163.86,"pd":163.86},{"t":"Lava-Texture Wide Ring","v":"7","q":1,"po":326.85,"pd":326.85},{"t":"Spike Pendant Necklace with Black Diamonds","v":"O.S","q":1,"po":489.84,"pd":489.84},{"t":"Curb Necklace with Black Diamond Link","v":"O.S","q":1,"po":1377.13,"pd":1377.13},{"t":"Geometric Pendant Necklace with Black Diamonds","v":"O.S","q":1,"po":704.26,"pd":704.26},{"t":"High-Rise Pleated Bermuda Shorts","v":"40","q":1,"po":191.75,"pd":191.75},{"t":"Anatomical Seam Skinny Trousers in Old Black","v":"40","q":1,"po":273.68,"pd":273.68},{"t":"Pat Cropped Leather Pants","v":"40","q":1,"po":311.16,"pd":311.16},{"t":"Long tank top","v":"M","q":1,"po":40.97,"pd":40.97},{"t":"Crew Neck Tank Top","v":"S","q":1,"po":40.97,"pd":40.97},{"t":"Primordial Is Primitive Coated Skinny Trousers in Crackled Parchment","v":"M","q":1,"po":68.86,"pd":68.86},{"t":"Drop Crotch Linen Shorts","v":"S","q":1,"po":187.39,"pd":187.39},{"t":"Matmix Terry Shorts","v":"S","q":1,"po":162.99,"pd":162.99},{"t":"Drop Crotch Linen Shorts","v":"S","q":1,"po":187.39,"pd":187.39},{"t":"Ribbed Tank Top","v":"XS","q":1,"po":74.09,"pd":74.09},{"t":"Technical Drop Crotch Shorts","v":"XS","q":1,"po":203.96,"pd":203.96},{"t":"Titanium Oval Sunglasses","v":"O.S","q":1,"po":434.06,"pd":434.06},{"t":"Spray-Dyed Light Wool Oversized Pullover","v":"S","q":1,"po":214.41,"pd":214.41},{"t":"Salt-Dyed Wool Pullover with Thumbhole Cuffs","v":"S","q":1,"po":343.41,"pd":343.41},{"t":"Ribbed Tank Top","v":"XS","q":1,"po":74.09,"pd":74.09},{"t":"TSHIRT","v":"XS","q":1,"po":104.59,"pd":104.59},{"t":"Stitch Jersey T-Shirt","v":"S","q":1,"po":74.09,"pd":74.09},{"t":"Technical Drop Crotch Shorts","v":"XS","q":1,"po":203.96,"pd":203.96},{"t":"Adios Pro 3 LX","v":"6.5","q":1,"po":373.05,"pd":373.05}]},{"n":"#10261","d":"2026-06-19T17:20:17Z","c":"Bram Tihany","co":"United States","t":218.19,"sub":166.7,"disc":0.0,"shipc":51.49,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELAYED","tn":"7123731845","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=7123731845"}],"ref":0,"items":[{"t":"Drop-Crotch Pants","v":"S","q":1,"po":166.7,"pd":166.7}]},{"n":"#10260","d":"2026-06-19T15:15:18Z","c":"Irakli Nikatchadze","co":"United States","t":417.18,"sub":365.73,"disc":40.64,"shipc":51.45,"dcodes":["EXTRA10"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873429578031","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873429578031"}],"ref":0.0,"items":[{"t":"Silk Button-Up Shirt","v":"M","q":1,"po":178.77,"pd":178.77},{"t":"CHASM RING","v":"9J","q":1,"po":227.6,"pd":227.6}]},{"n":"#10259","d":"2026-06-19T08:59:08Z","c":"Lily Ross","co":"New Zealand","t":1058.33,"sub":1058.33,"disc":1.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"2019799655","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=2019799655"},{"s":"DELIVERED","tn":"873544882539","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873544882539"}],"ref":0.0,"items":[{"t":"Sponge-Dyed Light Wool Pullover with Destroy Seam","v":"XL","q":1,"po":260.99,"pd":260.99},{"t":"Spray-Dyed Wool Low-Crotch Knit Pants","v":"XS","q":1,"po":186.35,"pd":186.35},{"t":"Spray-Dyed Wool Harem Knit Pants","v":"XS","q":1,"po":186.35,"pd":186.35},{"t":"Open-Knit Cotton Drop-Crotch Shorts","v":"XS","q":1,"po":142.87,"pd":142.87},{"t":"7RAW Diffuser — AURORE BORÉALE","v":"O.S","q":1,"po":96.58,"pd":96.58},{"t":"Spray-Dyed Wool Low-Crotch Knit Pants","v":"L","q":1,"po":186.19,"pd":185.19}]},{"n":"#10258","d":"2026-06-19T08:18:53Z","c":"Sergiu Doru","co":"Romania","t":1100.7,"sub":1100.7,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873424004078","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873424004078"},{"s":"DELIVERED","tn":"4828074123","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=4828074123"},{"s":"CANCELED","tn":"4828074123","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=4828074123"}],"ref":0,"items":[{"t":"Staple 69 Micro Ondes Organic Cotton T-Shirt — Black","v":"M","q":1,"po":183.61,"pd":183.61},{"t":"Asymmetric Cut Tank Top","v":"M","q":1,"po":101.16,"pd":101.16},{"t":"Asymmetric Cut Tank Top","v":"M","q":1,"po":101.16,"pd":101.16},{"t":"Striped Viscose Cotton Shirt","v":"L","q":1,"po":170.44,"pd":170.44},{"t":"Ribbed Tank Top","v":"XL","q":1,"po":73.48,"pd":73.48},{"t":"Wide-Leg Wool Trousers","v":"L","q":1,"po":234.95,"pd":234.95},{"t":"Low-Crotch Linen Trousers","v":"L","q":1,"po":235.9,"pd":235.9}]},{"n":"#10257","d":"2026-06-19T06:43:48Z","c":"Hiroaki Takada","co":"Japan","t":1034.44,"sub":1034.44,"disc":114.93,"shipc":0.0,"dcodes":["PZXBWS3G"],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"873425266262","tc":"FedEx","tu":"https://www.fedex.com/fedextrack/?trknbr=873425266262"},{"s":"DELIVERED","tn":"5779926305","tc":"DHL Express","tu":"https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=5779926305"}],"ref":0.0,"items":[{"t":"Open-Knit Cotton Drop-Crotch Shorts","v":"XS","q":1,"po":143.13,"pd":143.13},{"t":"Textured Cotton Drop-Crotch Shorts with Raw Hems","v":"XS","q":1,"po":132.83,"pd":132.83},{"t":"Garment-Dyed Cotton Knit Drop-Crotch Shorts","v":"XS","q":1,"po":132.83,"pd":132.83},{"t":"Frayed Edge Cotton Coat","v":"XL","q":1,"po":301.44,"pd":301.44},{"t":"Wide-Leg Cargo Shorts","v":"L","q":1,"po":135.54,"pd":135.54},{"t":"Frayed Edge Cotton Blazer","v":"L","q":1,"po":255.35,"pd":255.35},{"t":"Resin-Dyed Cotton Longline T-Shirt with Central Spine Seam","v":"XL","q":1,"po":48.25,"pd":48.25}]},{"n":"#10256","d":"2026-06-18T21:59:26Z","c":"Robert Hrdlicka","co":"Czech Republic","t":509.93,"sub":509.93,"disc":0.0,"shipc":0.0,"dcodes":[],"fin":"PAID","ful":"FULFILLED","cr":null,"cancelled":false,"ship":[{"s":"DELIVERED","tn":"7123722270","tc":"DHL Express","tu":"https://www.logistics.dhl/us-en/home/tracking.html?tracking-id=7123722270"}],"ref":0,"items":[{"t":"Loose-Fit Trousers","v":"50","q":1,"po":412.52,"pd":412.52},{"t":"Raw Seam T-Shirt","v":"M","q":1,"po":97.41,"pd":97.41}]}];
 
-const UPDATED = "8 ביולי 2026, 16:50";
+const UPDATED = "8 ביולי 2026, 17:10";
 
 // הודעות לקוחות מהג'ימייל (Shopify Inbox) — ללא מענה
 const MESSAGES = [
-  { who: "Michal Pouzar", date: "8.7", order: "", sev: "info",
+  { id: "m-pouzar", who: "Michal Pouzar", date: "8.7", order: "", sev: "info",
     text: "יש לו פריטי MD75 ושואל אם אפשר לקבל אותם דרך המחסן ביוון — כנראה כדי להימנע מחיובי מכס." },
-  { who: "Darren Beechey", date: "19.6", order: "#10243", sev: "critical",
+  { id: "m-darren", who: "Darren Beechey", date: "19.6", order: "#10243", sev: "critical",
     text: "קיבל את הטי-שירט (Modal-Cashmere) ו”מאוד מאוד מאוכזב” — נראה מתוקן עם טלאי בתחתית. שלח 3 תמונות. ללא מענה כבר 19 יום." },
-  { who: "Tom Hagemeyer", date: "6.7", order: "#10296", sev: "opportunity",
+  { id: "m-tom", who: "Tom Hagemeyer", date: "6.7", order: "#10296", sev: "opportunity",
     text: "ההזמנה שלו בוטלה אבל הז'קט עדיין באתר — שואל אם אפשר להזמין אותו במידה 52. הזדמנות להחזיר מכירה של ‏€98.7." },
-  { who: "Günther Villgrattner", date: "3–5.7", order: "", sev: "serious",
+  { id: "m-gunther", who: "Günther Villgrattner", date: "3–5.7", order: "", sev: "serious",
     text: "קיבל שתי חשבוניות מכס של FedEx באוסטריה על סך ‏€29.14 אחרי הרכישה ומבקש הסבר. שלח מסמכים. 6 הודעות ללא מענה." },
-  { who: "Alexander Feige", date: "15.6–26.6", order: "", sev: "serious",
+  { id: "m-feige", who: "Alexander Feige", date: "15.6–26.6", order: "", sev: "serious",
     text: "שאלות מידה על מכנסי SAPIO / צמר-מוהיר. כתב “I already sent an email on June 15th!” ואחר כך “Please reply”. ממתין מעל 3 שבועות." },
-  { who: "סטניסלב נזרוב", date: "23–24.6", order: "", sev: "serious",
+  { id: "m-nazarov", who: "סטניסלב נזרוב", date: "23–24.6", order: "", sev: "serious",
     text: "כתב שוב ושוב “יש פה מישהו??” והשאיר טלפון 0509019858 — מבקש שיחזרו אליו טלפונית." },
-  { who: "אברי אולשוונג", date: "7.7", order: "", sev: "info",
+  { id: "m-avri", who: "אברי אולשוונג", date: "7.7", order: "", sev: "info",
     text: "שואל אם אפשר לקבל מידה אחרת." },
-  { who: "Tami Katzenstein", date: "6.7", order: "", sev: "info",
+  { id: "m-tami", who: "Tami Katzenstein", date: "6.7", order: "", sev: "info",
     text: "שאלות על הכפכף השחור עם הניטים — חומר, צבע ומידות. ביקשה צילום מקרוב." },
-  { who: "David Greene", date: "2–5.7", order: "", sev: "info",
+  { id: "m-greene", who: "David Greene", date: "2–5.7", order: "", sev: "info",
     text: "מתעניין במגפי MD75 — חושש שהמידות קטנות, רוצה 42 או 43 (יש רק 42 במלאי)." },
-  { who: "Jurijs Suprunovics", date: "25–30.6", order: "", sev: "opportunity",
+  { id: "m-jurijs", who: "Jurijs Suprunovics", date: "25–30.6", order: "", sev: "opportunity",
     text: "מוכן לקנות היום פריט ב‑€600 אם יקבל הצעת מחיר — מתלבט על מידה ולא יוכל להחזיר." },
-  { who: "Sługocki Mariusz", date: "1.7", order: "#10290", sev: "info",
+  { id: "m-mariusz", who: "Sługocki Mariusz", date: "1.7", order: "#10290", sev: "info",
     text: "הזמנתו נמסרה. שואל על מחיר של שורטס ואם זמינים באתונה." },
-  { who: "alex.vaiderman@gmail.com", date: "30.6–1.7", order: "", sev: "info",
+  { id: "m-alex", who: "alex.vaiderman@gmail.com", date: "30.6–1.7", order: "", sev: "info",
     text: "שואל אם אפשר לשלם חלקית במזומן, איפה החנות והאם יש הנחה." },
-  { who: "Alona Bar On", date: "14.6", order: "3870 (IL)", sev: "serious",
+  { id: "m-alona", who: "Alona Bar On", date: "14.6", order: "3870 (IL)", sev: "serious",
     text: "רוצה להחזיר חצאית מהזמנה 3870 שהגיעה אליה (החנות הישראלית)." },
-  { who: "Mischa Gorbunow", date: "23.6", order: "", sev: "info",
+  { id: "m-mischa", who: "Mischa Gorbunow", date: "23.6", order: "", sev: "info",
     text: "שואל אם יגיעו פריטי Isaac Sellam SS26 (שורטס וגופייה) בצבע אלומיניום." },
-  { who: "Pawel Siemaszko", date: "24.6", order: "", sev: "info",
+  { id: "m-pawel", who: "Pawel Siemaszko", date: "24.6", order: "", sev: "info",
     text: "שאלות מידה על ז'קט Aito ומכנסיים — שני פריטים שרצה כבר אזלו." }
 ];
 
+// ---------- סימון "טופל" (נשמר ב-localStorage של הדפדפן) ----------
+const LS_KEY = "inn7-dash-resolved";
+let resolved;
+try { resolved = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }
+catch (e) { resolved = new Set(); }
+function saveResolved() { try { localStorage.setItem(LS_KEY, JSON.stringify([...resolved])); } catch (e) {} }
+let showResolvedAlerts = false, showResolvedMsgs = false;
+
 // ---------- זיהוי בעיות ----------
-const NOW = new Date("2026-07-08T13:40:00Z");
+const NOW = new Date("2026-07-08T14:00:00Z");
 const daysSince = d => Math.floor((NOW - new Date(d)) / 86400000);
 const eur = n => "€" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+const eur2 = n => "€" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 const MSG_BY_ORDER = { "#10243": "critical", "#10296": "opportunity" };
 
 function orderIssues(o) {
   const issues = [];
-  const cancelled = o.fin === "VOIDED";
-  if (!cancelled && o.fin === "AUTHORIZED")
+  if (!o.cancelled && o.fin === "AUTHORIZED")
     issues.push({ sev: "warning", label: "תשלום מאושר — לגבות ולשלוח" });
-  if (!cancelled && (o.fin === "PAID" || o.fin === "PARTIALLY_REFUNDED") && o.ful === "UNFULFILLED") {
+  if (!o.cancelled && (o.fin === "PAID" || o.fin === "PARTIALLY_REFUNDED") && o.ful === "UNFULFILLED") {
     const d = daysSince(o.d);
     issues.push({ sev: d > 3 ? "critical" : "warning", label: `שולם ולא נשלח ${d} ימים` });
   }
   if (o.ship.some(s => s.s === "DELAYED")) issues.push({ sev: "serious", label: "משלוח מעוכב" });
   if (o.ship.some(s => s.s === "ATTEMPTED_DELIVERY")) issues.push({ sev: "serious", label: "ניסיון מסירה נכשל" });
-  if (cancelled && o.cr === "INVENTORY") issues.push({ sev: "critical", label: "בוטל — חוסר מלאי" });
-  else if (cancelled) issues.push({ sev: "info", label: "בוטל ע״י הלקוח" });
+  if (o.cancelled && o.cr === "INVENTORY") issues.push({ sev: "critical", label: "בוטל — חוסר מלאי" });
+  else if (o.cancelled) issues.push({ sev: "info", label: "בוטל ע״י הלקוח" });
   if (o.fin === "PARTIALLY_REFUNDED" && o.ref > 0) issues.push({ sev: "warning", label: `החזר חלקי ${eur(o.ref)}` });
   if (MSG_BY_ORDER[o.n] === "critical") issues.push({ sev: "critical", label: "תלונת לקוח בג'ימייל" });
   if (MSG_BY_ORDER[o.n] === "opportunity") issues.push({ sev: "opportunity", label: "הלקוח רוצה להזמין שוב" });
@@ -292,7 +325,7 @@ function orderIssues(o) {
 }
 
 function category(o) {
-  if (o.fin === "VOIDED") return "cancelled";
+  if (o.cancelled) return "cancelled";
   const iss = orderIssues(o).filter(i => i.sev !== "info" && i.sev !== "opportunity");
   if (iss.length) return "action";
   if (o.ship.length && o.ship.every(s => ["DELIVERED", "FULFILLED"].includes(s.s))) return "delivered";
@@ -300,81 +333,99 @@ function category(o) {
 }
 
 // ---------- KPI ----------
-const active = ORDERS.filter(o => o.fin !== "VOIDED");
-const revenue = ORDERS.filter(o => ["PAID", "PARTIALLY_REFUNDED"].includes(o.fin)).reduce((a, o) => a + o.t - o.ref, 0);
-const needAction = ORDERS.filter(o => category(o) === "action");
-const cancelled = ORDERS.filter(o => o.fin === "VOIDED");
-const invCancelled = cancelled.filter(o => o.cr === "INVENTORY");
-const unfulfilled = active.filter(o => o.ful === "UNFULFILLED");
-const openMsgs = MESSAGES.length;
+function renderKpis() {
+  const active = ORDERS.filter(o => !o.cancelled);
+  const revenue = ORDERS.filter(o => ["PAID", "PARTIALLY_REFUNDED"].includes(o.fin)).reduce((a, o) => a + o.t - o.ref, 0);
+  const needAction = ORDERS.filter(o => category(o) === "action");
+  const cancelledOrders = ORDERS.filter(o => o.cancelled);
+  const invCancelled = cancelledOrders.filter(o => o.cr === "INVENTORY");
+  const unfulfilled = active.filter(o => o.ful === "UNFULFILLED");
+  const authorized = active.filter(o => o.fin === "AUTHORIZED").length;
+  const openMsgs = MESSAGES.filter(m => !resolved.has(m.id)).length;
 
-const KPIS = [
-  { label: "הזמנות (19.6–8.7)", value: ORDERS.length, note: `${active.length} פעילות · ${cancelled.length} בוטלו` },
-  { label: "הכנסות נטו ששולמו", value: eur(revenue), note: "אחרי החזרים, ללא ביטולים" },
-  { label: "ממתינות לשילוח", value: unfulfilled.length, flag: "warning", note: "כולל 2 ממתינות לגביית תשלום" },
-  { label: "דורשות טיפול", value: needAction.length, flag: "critical", note: "בעיות תשלום, שילוח או תלונות" },
-  { label: "הודעות ללא מענה", value: openMsgs, flag: "warning", note: "בג'ימייל · הוותיקה מ‑14.6" },
-  { label: "אבדן מביטולי מלאי", value: eur(invCancelled.reduce((a, o) => a + o.t, 0)), flag: "critical", note: `${invCancelled.length} הזמנות בוטלו בגלל חוסר מלאי` }
-];
+  const KPIS = [
+    { label: "הזמנות (19.6–8.7)", value: ORDERS.length, note: `${active.length} פעילות · ${cancelledOrders.length} בוטלו` },
+    { label: "הכנסות נטו ששולמו", value: eur(revenue), note: "אחרי החזרים, ללא ביטולים" },
+    { label: "ממתינות לשילוח", value: unfulfilled.length, flag: "warning", note: `כולל ${authorized} ממתינות לגביית תשלום` },
+    { label: "דורשות טיפול", value: needAction.length, flag: "critical", note: "בעיות תשלום, שילוח או תלונות" },
+    { label: "הודעות ללא מענה", value: openMsgs, flag: openMsgs ? "warning" : "good", note: resolved.size ? `${resolved.size} סומנו כטופלו` : "בג'ימייל · הוותיקה מ‑14.6" },
+    { label: "אבדן מביטולי מלאי", value: eur(invCancelled.reduce((a, o) => a + o.t, 0)), flag: "critical", note: `${invCancelled.length} הזמנות בוטלו בגלל חוסר מלאי` }
+  ];
 
-document.getElementById("kpis").innerHTML = KPIS.map(k => `
-  <div class="kpi ${k.flag ? "flag-" + k.flag : ""}">
-    <span class="label">${k.label}</span>
-    <span class="value"><bdi>${k.value}</bdi></span>
-    <span class="note">${k.note}</span>
-  </div>`).join("");
+  document.getElementById("kpis").innerHTML = KPIS.map(k => `
+    <div class="kpi ${k.flag ? "flag-" + k.flag : ""}">
+      <span class="label">${k.label}</span>
+      <span class="value"><bdi>${k.value}</bdi></span>
+      <span class="note">${k.note}</span>
+    </div>`).join("");
+}
 
 // ---------- התראות ----------
 const ALERTS = [
-  { sev: "critical", kind: "תלונת לקוח · 19 יום ללא מענה", title: "‏Darren Beechey — פריט פגום בהזמנה <bdi>#10243</bdi>",
+  { id: "a-darren", sev: "critical", kind: "תלונת לקוח · 19 יום ללא מענה", title: "‏Darren Beechey — פריט פגום בהזמנה <bdi>#10243</bdi>",
     text: "קיבל טי-שירט (‏€199) שנראה “מתוקן עם טלאי” ושלח תמונות. ככל שהמענה מתעכב — גדל הסיכוי לצ'ארג'בק.", meta: "מקור: ג'ימייל · 19.6" },
-  { sev: "critical", kind: "שולם ולא נשלח · 13 ימים", title: "הזמנה <bdi>#10275</bdi> — Andrew Thurber, ‏€968",
+  { id: "a-10275", sev: "critical", kind: "שולם ולא נשלח · 13 ימים", title: "הזמנה <bdi>#10275</bdi> — Andrew Thurber, ‏€968",
     text: "שולמה ב‑25.6 ועדיין לא שולחה. ההזמנה הפתוחה הוותיקה ביותר שדורשת שילוח.", meta: "מקור: שופיפיי" },
-  { sev: "warning", kind: "2 הזמנות ממתינות לגבייה", title: "לגבות תשלום ולשלוח — <bdi>#10305</bdi> (חדשה) ו‑<bdi>#10302</bdi>",
+  { id: "a-capture", sev: "warning", kind: "2 הזמנות ממתינות לגבייה", title: "לגבות תשלום ולשלוח — <bdi>#10305</bdi> (חדשה) ו‑<bdi>#10302</bdi>",
     text: "‏<bdi>#10305</bdi> נכנסה היום: Tribula Schweiz (לקוח חוזר), ‏€1,038, 7 פריטים. ‏<bdi>#10302</bdi> ממתינה מאז 7.7 (‏€124). אישור תשלום שלא נגבה פג תוקף תוך כשבוע. ‏#10303 ו‑#10304 מאתמול כבר נגבו ונשלחו.", meta: "מקור: שופיפיי" },
-  { sev: "critical", kind: "סנכרון מלאי", title: "3 הזמנות בוטלו בגלל חוסר מלאי — ‏€1,386",
+  { id: "a-inventory", sev: "critical", kind: "סנכרון מלאי", title: "3 הזמנות בוטלו בגלל חוסר מלאי — ‏€1,386",
     text: "<bdi>#10301</bdi>, <bdi>#10282</bdi>, <bdi>#10268</bdi> בוטלו כי הפריט לא היה בפועל במלאי. שווה לבדוק סנכרון מלאי בין החנות למחסן.", meta: "מקור: שופיפיי · 23.6–7.7" },
-  { sev: "serious", kind: "משלוחים תקועים", title: "4 משלוחים מעוכבים ואחד עם מסירה שנכשלה",
+  { id: "a-delays", sev: "serious", kind: "משלוחים תקועים", title: "4 משלוחים מעוכבים ואחד עם מסירה שנכשלה",
     text: "מעוכבים: <bdi>#10261</bdi>, <bdi>#10262</bdi> (הזמנה של ‏€7,478!), ומהיום גם <bdi>#10287</bdi> ו‑<bdi>#10280</bdi>. ניסיון מסירה נכשל: <bdi>#10288</bdi> — כדאי לתאם מול DHL. ‏#10291 השתחרר ויצא לחלוקה.", meta: "מקור: שופיפיי / DHL" },
-  { sev: "serious", kind: "חיובי מכס ללקוח", title: "‏Günther Villgrattner — חשבוניות מכס FedEx באוסטריה",
+  { id: "a-gunther", sev: "serious", kind: "חיובי מכס ללקוח", title: "‏Günther Villgrattner — חשבוניות מכס FedEx באוסטריה",
     text: "קיבל חיובי מכס של ‏€29.14 אחרי הרכישה ושואל למה. 6 הודעות ללא מענה מאז 3.7.", meta: "מקור: ג'ימייל" },
-  { sev: "serious", kind: "לקוחות ממתינים למענה", title: "Alexander Feige (מ‑15.6) וסטניסלב נזרוב (מ‑23.6)",
+  { id: "a-waiting", sev: "serious", kind: "לקוחות ממתינים למענה", title: "Alexander Feige (מ‑15.6) וסטניסלב נזרוב (מ‑23.6)",
     text: "פייגה שלח תזכורת “Please reply”; נזרוב השאיר טלפון וביקש שיחה: 0509019858.", meta: "מקור: ג'ימייל" },
-  { sev: "opportunity", kind: "הזדמנויות מכירה", title: "שתי מכירות שאפשר להציל — ‏€700+",
+  { id: "a-opps", sev: "opportunity", kind: "הזדמנויות מכירה", title: "שתי מכירות שאפשר להציל — ‏€700+",
     text: "‏Tom Hagemeyer רוצה את הז'קט מההזמנה המבוטלת <bdi>#10296</bdi> במידה 52 · ‏Jurijs Suprunovics מוכן לסגור היום ב‑€600.", meta: "מקור: ג'ימייל" }
 ];
 
-document.getElementById("alerts").innerHTML = ALERTS.map(a => `
-  <div class="alert ${a.sev}">
+function alertCard(a, isResolved) {
+  return `
+  <div class="alert ${a.sev}${isResolved ? " resolved" : ""}">
     <div class="stripe"></div>
     <div>
       <span class="kind">${a.kind}</span>
       <h3>${a.title}</h3>
       <p>${a.text}</p>
-      <span class="meta">${a.meta}</span>
+      <span class="meta">${a.meta}
+        <button class="resolve-btn${isResolved ? " undo" : ""}" data-resolve="${a.id}">${isResolved ? "החזר ↩" : "טופל ✓"}</button>
+      </span>
     </div>
-  </div>`).join("");
+  </div>`;
+}
+
+function renderAlerts() {
+  const open = ALERTS.filter(a => !resolved.has(a.id));
+  const done = ALERTS.filter(a => resolved.has(a.id));
+  let html = open.map(a => alertCard(a, false)).join("");
+  if (showResolvedAlerts) html += done.map(a => alertCard(a, true)).join("");
+  if (!open.length && !showResolvedAlerts) html = `<div class="empty">אין בעיות פתוחות 🎉</div>`;
+  document.getElementById("alerts").innerHTML = html;
+  document.getElementById("alerts-resolved-bar").innerHTML = done.length
+    ? `<button class="chip" data-toggle="alerts" aria-pressed="${showResolvedAlerts}">${showResolvedAlerts ? "הסתר" : "הצג"} ${done.length} שטופלו</button>` : "";
+}
 
 // ---------- טבלת הזמנות ----------
 const FIN_HE = {
   PAID: ["שולם", "good"], AUTHORIZED: ["מאושר — לא נגבה", "warning"],
   VOIDED: ["בוטל", "critical"], PARTIALLY_REFUNDED: ["הוחזר חלקית", "warning"],
-  PENDING: ["ממתין", "warning"], REFUNDED: ["הוחזר", "info"]
+  PENDING: ["ממתין", "warning"], REFUNDED: ["הוחזר", "info"], EXPIRED: ["פג תוקף", "critical"]
 };
 const SHIP_HE = {
   DELIVERED: ["נמסר", "good"], IN_TRANSIT: ["בדרך", "accent"], DELAYED: ["מעוכב", "serious"],
   ATTEMPTED_DELIVERY: ["מסירה נכשלה", "serious"], FULFILLED: ["נשלח", "accent"],
-  CANCELED: ["בוטל", "info"], OUT_FOR_DELIVERY: ["יצא לחלוקה", "accent"]
+  CANCELED: ["בוטל", "info"], OUT_FOR_DELIVERY: ["יצא לחלוקה", "accent"], CONFIRMED: ["אושר", "accent"]
 };
 const fmtDate = d => new Date(d).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" });
 
 function shipCell(o) {
-  if (o.fin === "VOIDED") return "<span class='pill'>—</span>";
+  if (o.cancelled) return "<span class='pill'>—</span>";
   if (!o.ship.length) return "<span class='pill warning'>טרם נשלח</span>";
   const seen = new Set();
   return o.ship.map(s => {
     const [label, cls] = SHIP_HE[s.s] || [s.s, ""];
-    const key = label; if (seen.has(key)) return ""; seen.add(key);
+    if (seen.has(label)) return ""; seen.add(label);
     return `<span class="pill ${cls}">${label}</span>`;
   }).join(" ");
 }
@@ -382,6 +433,32 @@ function trackCell(o) {
   const t = o.ship.filter(s => s.tn);
   if (!t.length) return "<span class='country'>—</span>";
   return t.map(s => `<a href="${s.tu}" target="_blank" rel="noopener">${s.tc === "DHL Express" ? "DHL" : s.tc} <bdi>${s.tn}</bdi></a>`).join("<br>");
+}
+
+function detailHTML(o) {
+  const rows = o.items.map(it => {
+    const hasDisc = it.po > it.pd + 0.005;
+    const pct = hasDisc ? Math.round((1 - it.pd / it.po) * 100) : 0;
+    return `<tr>
+      <td><bdi>${it.t}</bdi>${it.v ? ` <span class="country"><bdi>(${it.v})</bdi></span>` : ""}</td>
+      <td class="num">${it.q}</td>
+      <td class="num">${eur2(it.po)}</td>
+      <td class="num">${hasDisc ? `<span class="discount">‎−${pct}%‎ (${eur2((it.po - it.pd) * it.q)})</span>` : "<span class='country'>—</span>"}</td>
+      <td class="num"><b>${eur2(it.pd)}</b></td>
+      <td class="num"><b>${eur2(it.pd * it.q)}</b></td>
+    </tr>`;
+  }).join("");
+  const fullPrice = o.items.reduce((a, it) => a + it.po * it.q, 0);
+  const parts = [`מחיר מלא: <b>${eur2(fullPrice)}</b>`];
+  if (o.disc > 0.005) parts.push(`הנחה: <span class="discount">‎−${eur2(o.disc)}‎</span>${o.dcodes && o.dcodes.length ? ` (קוד <bdi>${o.dcodes.join(", ")}</bdi>)` : ""}`);
+  parts.push(`משלוח: ${o.shipc > 0.005 ? eur2(o.shipc) : "חינם"}`);
+  parts.push(`סה״כ ששולם: <b>${eur2(o.t)}</b>`);
+  if (o.ref > 0.005) parts.push(`<span class="refnote">הוחזר: ‎−${eur2(o.ref)}‎</span>`);
+  return `<table class="itemstbl">
+    <thead><tr><th>פריט</th><th class="num">כמות</th><th class="num">מחיר רגיל</th><th class="num">הנחה</th><th class="num">מחיר לפריט</th><th class="num">סה״כ שורה</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="osummary">${parts.join(" · ")}</div>`;
 }
 
 let filter = "all", query = "";
@@ -406,40 +483,97 @@ function renderFilters() {
 }
 
 function renderRows() {
-  const rows = ORDERS.filter(o => (filter === "all" || category(o) === filter))
-    .filter(o => !query || (o.c + " " + o.n).toLowerCase().includes(query));
+  const rows = ORDERS.map((o, i) => ({ o, i }))
+    .filter(({ o }) => (filter === "all" || category(o) === filter))
+    .filter(({ o }) => !query || (o.c + " " + o.n).toLowerCase().includes(query));
   document.getElementById("empty").hidden = rows.length > 0;
-  document.getElementById("rows").innerHTML = rows.map(o => {
+  document.getElementById("rows").innerHTML = rows.map(({ o, i }) => {
     const [finLabel, finCls] = FIN_HE[o.fin] || [o.fin, ""];
     const issues = orderIssues(o);
-    return `<tr>
-      <td class="ordno"><bdi>${o.n}</bdi></td>
+    const iq = o.items.reduce((a, it) => a + it.q, 0);
+    const first = o.items[0] ? o.items[0].t : "";
+    return `<tr class="orow" data-i="${i}" tabindex="0" role="button" aria-expanded="false" aria-label="פירוט הזמנה ${o.n}">
+      <td class="ordno"><span class="caret">◀</span><bdi>${o.n}</bdi></td>
       <td class="num">${fmtDate(o.d)}</td>
       <td><span class="cust"><bdi>${o.c}</bdi></span><br><span class="country">${o.co || ""}</span></td>
-      <td class="item"><bdi>${o.it}</bdi>${o.iq > 1 ? ` <span class="country">(+${o.iq - 1})</span>` : ""}</td>
-      <td class="num"><b>${eur(o.t)}</b>${o.ref ? `<br><span class="country">החזר ${eur(o.ref)}</span>` : ""}</td>
+      <td class="item"><bdi>${first}</bdi>${iq > 1 ? ` <span class="country">(+${iq - 1})</span>` : ""}</td>
+      <td class="num"><b>${eur(o.t)}</b>${o.ref ? `<br><span class="country">החזר ${eur(o.ref)}</span>` : ""}${o.disc > 0.005 ? `<br><span class="country discount">הנחה ${eur(o.disc)}</span>` : ""}</td>
       <td><span class="pill ${finCls}">${finLabel}</span></td>
       <td>${shipCell(o)}</td>
       <td class="track">${trackCell(o)}</td>
-      <td><div class="issues">${issues.length ? issues.map(i => `<span class="issue ${i.sev}">${i.label}</span>`).join("") : "<span class='country'>—</span>"}</div></td>
+      <td><div class="issues">${issues.length ? issues.map(x => `<span class="issue ${x.sev}">${x.label}</span>`).join("") : "<span class='country'>—</span>"}</div></td>
     </tr>`;
   }).join("");
 }
+
+function toggleDetail(tr) {
+  const next = tr.nextElementSibling;
+  if (next && next.classList.contains("detailrow")) {
+    next.remove();
+    tr.setAttribute("aria-expanded", "false");
+    return;
+  }
+  const o = ORDERS[+tr.dataset.i];
+  const dr = document.createElement("tr");
+  dr.className = "detailrow";
+  dr.innerHTML = `<td colspan="9">${detailHTML(o)}</td>`;
+  tr.after(dr);
+  tr.setAttribute("aria-expanded", "true");
+}
+
+document.getElementById("rows").addEventListener("click", e => {
+  if (e.target.closest("a")) return;
+  const tr = e.target.closest("tr.orow");
+  if (tr) toggleDetail(tr);
+});
+document.getElementById("rows").addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const tr = e.target.closest("tr.orow");
+  if (tr) { e.preventDefault(); toggleDetail(tr); }
+});
 document.getElementById("search").addEventListener("input", e => { query = e.target.value.trim().toLowerCase(); renderRows(); });
 
 // ---------- הודעות ----------
 const SEV_PILL = { critical: ["תלונה", "critical"], serious: ["ממתין למענה", "serious"], info: ["שאלה", "warning"], opportunity: ["הזדמנות מכירה", "good"] };
-document.getElementById("msgs").innerHTML = MESSAGES.map(m => {
+function msgCard(m, isResolved) {
   const [label, cls] = SEV_PILL[m.sev];
-  return `<div class="msg">
+  return `<div class="msg${isResolved ? " resolved" : ""}">
     <div class="who"><b><bdi>${m.who}</bdi></b>
       ${m.order ? `<span class="order-ref"><bdi>${m.order}</bdi></span>` : ""}
       <span class="pill ${cls}">${label}</span>
       <span class="when">${m.date}</span>
     </div>
     <p>${m.text}</p>
+    <div class="actions"><button class="resolve-btn${isResolved ? " undo" : ""}" data-resolve="${m.id}">${isResolved ? "החזר ↩" : "טופל ✓"}</button></div>
   </div>`;
-}).join("");
+}
+function renderMsgs() {
+  const open = MESSAGES.filter(m => !resolved.has(m.id));
+  const done = MESSAGES.filter(m => resolved.has(m.id));
+  let html = open.map(m => msgCard(m, false)).join("");
+  if (showResolvedMsgs) html += done.map(m => msgCard(m, true)).join("");
+  if (!open.length && !showResolvedMsgs) html = `<div class="empty">כל ההודעות נענו 🎉</div>`;
+  document.getElementById("msgs").innerHTML = html;
+  document.getElementById("msgs-resolved-bar").innerHTML = done.length
+    ? `<button class="chip" data-toggle="msgs" aria-pressed="${showResolvedMsgs}">${showResolvedMsgs ? "הסתר" : "הצג"} ${done.length} שטופלו</button>` : "";
+}
+
+document.addEventListener("click", e => {
+  const rb = e.target.closest("[data-resolve]");
+  if (rb) {
+    const id = rb.dataset.resolve;
+    resolved.has(id) ? resolved.delete(id) : resolved.add(id);
+    saveResolved();
+    renderAll();
+    return;
+  }
+  const tg = e.target.closest("[data-toggle]");
+  if (tg) {
+    if (tg.dataset.toggle === "alerts") showResolvedAlerts = !showResolvedAlerts;
+    else showResolvedMsgs = !showResolvedMsgs;
+    renderAll();
+  }
+});
 
 // ---------- גרף מכירות יומי ----------
 const BY_DAY = [{"d": "2026-06-19", "n": 6, "rev": 11307}, {"d": "2026-06-20", "n": 2, "rev": 682}, {"d": "2026-06-21", "n": 1, "rev": 327}, {"d": "2026-06-22", "n": 2, "rev": 883}, {"d": "2026-06-23", "n": 1, "rev": 218}, {"d": "2026-06-24", "n": 1, "rev": 1077}, {"d": "2026-06-25", "n": 3, "rev": 1397}, {"d": "2026-06-26", "n": 3, "rev": 990}, {"d": "2026-06-27", "n": 1, "rev": 599}, {"d": "2026-06-29", "n": 4, "rev": 1568}, {"d": "2026-07-01", "n": 4, "rev": 1412}, {"d": "2026-07-02", "n": 4, "rev": 2371}, {"d": "2026-07-03", "n": 1, "rev": 415}, {"d": "2026-07-05", "n": 2, "rev": 882}, {"d": "2026-07-06", "n": 1, "rev": 431}, {"d": "2026-07-07", "n": 3, "rev": 1300}, {"d": "2026-07-08", "n": 1, "rev": 1038}];
@@ -490,7 +624,10 @@ const BY_DAY = [{"d": "2026-06-19", "n": 6, "rev": 11307}, {"d": "2026-06-20", "
   });
 })();
 
+function renderAll() { renderKpis(); renderAlerts(); renderMsgs(); }
+
 document.getElementById("updated-at").textContent = UPDATED;
+renderAll();
 renderFilters();
 renderRows();
 </script>
