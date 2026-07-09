@@ -52,6 +52,7 @@
     transition: background 0.15s, border-color 0.15s;
   }
   button:hover { border-color: var(--muted); }
+  button, input, select, .step { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #0c1a12; font-weight: 600; }
   button.primary:hover { filter: brightness(1.1); }
   button:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -116,6 +117,16 @@
     border-radius: 4px; padding: 0 5px; font-size: 11px; font-family: inherit;
   }
   a { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    #transport { gap: 10px; }
+    .track-btns button { padding: 8px 12px; }
+    .step { border-radius: 3px; }
+    #drums .row-name { width: 44px; font-size: 11px; }
+    #drums input[type="range"] { width: 56px; }
+    .fx { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
