@@ -443,7 +443,7 @@ function makeTrack(i) {
     params: {
       filterType: 'off', filterFreq: 2000, filterQ: 2,
       delayTime: 0.3, delayFb: 0.35, delayMix: 0, reverbMix: 0,
-      pan: 0, drive: 0, chorusMix: 0, chorusRate: 1.5,
+      pan: 0, drive: 0, bass: 0, chorusMix: 0, chorusRate: 1.5,
       tremDepth: 0, tremRate: 5, speed: 1,
     },
     nodes: null,
@@ -478,9 +478,16 @@ function buildTrackChain(anyCtx, track, dest, reverb, keepRefs) {
   postDrive.gain.value = 1 / (1 + p.drive * 1.5);
   input.connect(shaper); shaper.connect(postDrive);
 
+  // Bass boost: low-shelf lifting everything under ~250 Hz.
+  const bass = anyCtx.createBiquadFilter();
+  bass.type = 'lowshelf';
+  bass.frequency.value = 250;
+  bass.gain.value = p.bass;
+  postDrive.connect(bass);
+
   const filter = anyCtx.createBiquadFilter();
   applyFilterParams(filter, p);
-  postDrive.connect(filter);
+  bass.connect(filter);
 
   // Tremolo: LFO wiggles a gain around 1 - depth/2.
   const trem = anyCtx.createGain();
@@ -524,7 +531,7 @@ function buildTrackChain(anyCtx, track, dest, reverb, keepRefs) {
   out.connect(panner);
   panner.connect(dest);
 
-  const nodes = { input, shaper, postDrive, filter, trem, tremLfo, tremLfoGain, delay, fb, delaySend, chorusSend, chorusLfo, reverbSend, out, panner };
+  const nodes = { input, shaper, postDrive, bass, filter, trem, tremLfo, tremLfoGain, delay, fb, delaySend, chorusSend, chorusLfo, reverbSend, out, panner };
   if (keepRefs) track.nodes = nodes;
   return nodes;
 }
@@ -547,6 +554,7 @@ function applyTrackParams(track) {
   n.input.gain.setTargetAtTime(track.muted ? 0 : track.vol, t, 0.01);
   n.shaper.curve = makeDriveCurve(p.drive);
   n.postDrive.gain.setTargetAtTime(1 / (1 + p.drive * 1.5), t, 0.01);
+  n.bass.gain.setTargetAtTime(p.bass, t, 0.01);
   applyFilterParams(n.filter, p);
   n.trem.gain.setTargetAtTime(1 - p.tremDepth * 0.5, t, 0.01);
   n.tremLfoGain.gain.setTargetAtTime(p.tremDepth * 0.5, t, 0.01);
@@ -930,6 +938,7 @@ function buildTrackUI(track) {
   fx.appendChild(sel('Filter', [['off', 'Off'], ['lowpass', 'Low-pass'], ['highpass', 'High-pass'], ['bandpass', 'Band-pass'], ['notch', 'Notch']], p.filterType, v => { p.filterType = v; upd(); }));
   fx.appendChild(slider('Cutoff', 60, 12000, 10, p.filterFreq, v => v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : v + ' Hz', v => { p.filterFreq = v; upd(); }));
   fx.appendChild(slider('Resonance', 0.1, 15, 0.1, p.filterQ, v => v.toFixed(1), v => { p.filterQ = v; upd(); }));
+  fx.appendChild(slider('Bass', 0, 18, 0.5, p.bass, v => '+' + v.toFixed(1) + ' dB', v => { p.bass = v; upd(); }));
   fx.appendChild(slider('Drive', 0, 1, 0.01, p.drive, v => Math.round(v * 100) + '%', v => { p.drive = v; upd(); }));
   fx.appendChild(slider('Delay mix', 0, 1, 0.01, p.delayMix, v => Math.round(v * 100) + '%', v => { p.delayMix = v; upd(); }));
   fx.appendChild(slider('Delay time', 0.05, 1, 0.01, p.delayTime, v => Math.round(v * 1000) + ' ms', v => { p.delayTime = v; upd(); }));

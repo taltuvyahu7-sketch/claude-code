@@ -26,7 +26,8 @@ will re-record what comes out of your speakers.
 - **4 loop tracks** — hit *Rec* (or keys `1`–`4`); after a 1-bar count-in the track
   records exactly one loop (BPM × loop length, sample-accurate via an AudioWorklet)
   and immediately starts looping. All tracks stay locked to the same grid.
-- **Per-track effects** — volume, stereo pan, low/high/band-pass/notch filter with
+- **Per-track effects** — volume, stereo pan, bass boost (low-shelf, up to +18 dB),
+  low/high/band-pass/notch filter with
   cutoff + resonance, drive (soft-clip distortion), delay (mix / time / feedback),
   a shared reverb send, chorus (mix + rate), and tremolo (depth + rate). Everything
   is tweakable live while the loop plays.
