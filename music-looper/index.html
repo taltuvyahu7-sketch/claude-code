@@ -89,6 +89,7 @@
   button.rec-btn.armed { border-color: var(--arm); color: var(--arm); }
   button.rec-btn.recording { background: var(--rec); border-color: var(--rec); color: #fff; }
   button.mute-btn.muted { border-color: var(--rec); color: var(--rec); }
+  button.rev-btn.active { border-color: var(--accent); color: var(--accent); }
 
   .fx { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 14px; margin-top: 6px; }
   .fx label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
@@ -177,7 +178,8 @@
   <footer>
     <b>How it works:</b> hit <b>Rec</b> on a track &mdash; after the count-in it records exactly one loop
     (BPM &times; loop length) and immediately starts looping. Record the other tracks on top; everything stays in sync.
-    Shape each track with the filter, delay and reverb controls, add a beat with the drum machine, then <b>Export WAV</b> to download the mix.<br>
+    Shape each track with pan, drive, filter (low/high/band-pass or notch), delay, reverb, chorus and tremolo; flip it backwards with <b>&#8646;</b>
+    or switch its speed to &frac12;&times;/2&times; (stays in sync). Add a beat with the drum machine, then <b>Export WAV</b> to download the mix.<br>
     <b>Shortcuts:</b> <kbd>Space</kbd> play/stop &nbsp; <kbd>1</kbd>&ndash;<kbd>4</kbd> record track &nbsp; <kbd>M</kbd> metronome.<br>
     <b>Tips:</b> use headphones (otherwise the mic re-records your speakers). If your recorded loops feel late against the
     drums, raise <i>Latency comp</i>; if early, lower it. BPM and loop length lock once a loop exists &mdash; <i>Clear all</i> to change them.
@@ -436,41 +438,93 @@ function makeTrack(i) {
     source: null,
     state: 'empty', // empty | armed | recording | playing
     muted: false,
+    reversed: false,
     vol: 0.9,
-    params: { filterType: 'off', filterFreq: 2000, filterQ: 2, delayTime: 0.3, delayFb: 0.35, delayMix: 0, reverbMix: 0 },
+    params: {
+      filterType: 'off', filterFreq: 2000, filterQ: 2,
+      delayTime: 0.3, delayFb: 0.35, delayMix: 0, reverbMix: 0,
+      pan: 0, drive: 0, chorusMix: 0, chorusRate: 1.5,
+      tremDepth: 0, tremRate: 5, speed: 1,
+    },
     nodes: null,
     el: null,
   };
 }
 
-// Builds input -> volume -> filter -> (dry + delay + reverb send) -> dest.
+// Soft-clip curve for the drive effect; null means passthrough.
+function makeDriveCurve(amount) {
+  if (amount <= 0) return null;
+  const k = amount * 60;
+  const n = 512;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+  }
+  return curve;
+}
+
+// Builds input -> drive -> filter -> tremolo -> (dry + delay + chorus + reverb send) -> pan -> dest.
 // Used both live and for offline export rendering.
 function buildTrackChain(anyCtx, track, dest, reverb, keepRefs) {
   const p = track.params;
   const input = anyCtx.createGain();
   input.gain.value = track.muted ? 0 : track.vol;
 
+  const shaper = anyCtx.createWaveShaper();
+  shaper.oversample = '4x';
+  shaper.curve = makeDriveCurve(p.drive);
+  const postDrive = anyCtx.createGain();
+  postDrive.gain.value = 1 / (1 + p.drive * 1.5);
+  input.connect(shaper); shaper.connect(postDrive);
+
   const filter = anyCtx.createBiquadFilter();
   applyFilterParams(filter, p);
-  input.connect(filter);
+  postDrive.connect(filter);
+
+  // Tremolo: LFO wiggles a gain around 1 - depth/2.
+  const trem = anyCtx.createGain();
+  trem.gain.value = 1 - p.tremDepth * 0.5;
+  const tremLfo = anyCtx.createOscillator();
+  tremLfo.frequency.value = p.tremRate;
+  const tremLfoGain = anyCtx.createGain();
+  tremLfoGain.gain.value = p.tremDepth * 0.5;
+  tremLfo.connect(tremLfoGain); tremLfoGain.connect(trem.gain);
+  tremLfo.start();
+  filter.connect(trem);
 
   const out = anyCtx.createGain();
-  filter.connect(out); // dry
+  trem.connect(out); // dry
 
   const delay = anyCtx.createDelay(2);
   delay.delayTime.value = p.delayTime;
   const fb = anyCtx.createGain(); fb.gain.value = p.delayFb;
   const delaySend = anyCtx.createGain(); delaySend.gain.value = p.delayMix;
-  filter.connect(delaySend); delaySend.connect(delay);
+  trem.connect(delaySend); delaySend.connect(delay);
   delay.connect(fb); fb.connect(delay);
   delay.connect(out);
 
+  // Chorus: short delay modulated by an LFO, mixed in parallel.
+  const chorusSend = anyCtx.createGain(); chorusSend.gain.value = p.chorusMix;
+  const chorusDelay = anyCtx.createDelay(0.1);
+  chorusDelay.delayTime.value = 0.018;
+  const chorusLfo = anyCtx.createOscillator();
+  chorusLfo.frequency.value = p.chorusRate;
+  const chorusLfoGain = anyCtx.createGain();
+  chorusLfoGain.gain.value = 0.005;
+  chorusLfo.connect(chorusLfoGain); chorusLfoGain.connect(chorusDelay.delayTime);
+  chorusLfo.start();
+  trem.connect(chorusSend); chorusSend.connect(chorusDelay); chorusDelay.connect(out);
+
   const reverbSend = anyCtx.createGain(); reverbSend.gain.value = p.reverbMix;
-  filter.connect(reverbSend); reverbSend.connect(reverb);
+  trem.connect(reverbSend); reverbSend.connect(reverb);
 
-  out.connect(dest);
+  const panner = anyCtx.createStereoPanner();
+  panner.pan.value = p.pan;
+  out.connect(panner);
+  panner.connect(dest);
 
-  const nodes = { input, filter, delay, fb, delaySend, reverbSend, out };
+  const nodes = { input, shaper, postDrive, filter, trem, tremLfo, tremLfoGain, delay, fb, delaySend, chorusSend, chorusLfo, reverbSend, out, panner };
   if (keepRefs) track.nodes = nodes;
   return nodes;
 }
@@ -491,11 +545,19 @@ function applyTrackParams(track) {
   if (!track.nodes) return;
   const n = track.nodes, p = track.params, t = ctx.currentTime;
   n.input.gain.setTargetAtTime(track.muted ? 0 : track.vol, t, 0.01);
+  n.shaper.curve = makeDriveCurve(p.drive);
+  n.postDrive.gain.setTargetAtTime(1 / (1 + p.drive * 1.5), t, 0.01);
   applyFilterParams(n.filter, p);
+  n.trem.gain.setTargetAtTime(1 - p.tremDepth * 0.5, t, 0.01);
+  n.tremLfoGain.gain.setTargetAtTime(p.tremDepth * 0.5, t, 0.01);
+  n.tremLfo.frequency.setTargetAtTime(p.tremRate, t, 0.01);
   n.delay.delayTime.setTargetAtTime(p.delayTime, t, 0.05);
   n.fb.gain.setTargetAtTime(p.delayFb, t, 0.01);
   n.delaySend.gain.setTargetAtTime(p.delayMix, t, 0.01);
+  n.chorusSend.gain.setTargetAtTime(p.chorusMix, t, 0.01);
+  n.chorusLfo.frequency.setTargetAtTime(p.chorusRate, t, 0.01);
   n.reverbSend.gain.setTargetAtTime(p.reverbMix, t, 0.01);
+  n.panner.pan.setTargetAtTime(p.pan, t, 0.01);
 }
 
 function startTrackSource(track, when, offset) {
@@ -504,10 +566,35 @@ function startTrackSource(track, when, offset) {
   const src = ctx.createBufferSource();
   src.buffer = track.buffer;
   src.loop = true;
+  src.playbackRate.value = track.params.speed;
   src.connect(track.nodes.input);
   src.start(when, offset);
   track.source = src;
   setTrackState(track, 'playing');
+}
+
+// Restart a playing source in phase with the transport (used after
+// speed changes or reversing the buffer).
+function realignTrack(track) {
+  if (!track.buffer) return;
+  if (!running) return;
+  const now = ctx.currentTime;
+  const rate = track.params.speed;
+  const period = track.buffer.duration / rate; // real-time seconds per pass
+  const offset = ((now - loopStart) % period + period) % period * rate;
+  startTrackSource(track, now, offset);
+}
+
+function reverseTrack(track) {
+  if (!track.buffer) return;
+  const d = track.buffer.getChannelData(0);
+  d.reverse();
+  realignTrack(track);
+}
+
+function resetReverse(track) {
+  track.reversed = false;
+  track.el.querySelector('.rev-btn').classList.remove('active');
 }
 
 function stopTrackSource(track) {
@@ -601,6 +688,7 @@ function finalizeRecording() {
   }
 
   track.buffer = buf;
+  resetReverse(track);
   if (running) {
     const now = ctx.currentTime;
     startTrackSource(track, now, (now - loopStart) % loopDur);
@@ -695,7 +783,9 @@ async function exportWav() {
   if (!hasAudio) { status('Nothing to export yet — record a loop or enable some drum steps.'); return; }
 
   const sr = ctx.sampleRate;
-  const off = new OfflineAudioContext(2, loopSamples, sr);
+  // Half-speed tracks take two loop cycles to play out fully.
+  const renderLoops = tracks.some(t => t.buffer && !t.muted && t.params.speed < 1) ? 2 : 1;
+  const off = new OfflineAudioContext(2, loopSamples * renderLoops, sr);
   const offMaster = off.createGain();
   offMaster.gain.value = parseFloat($('masterVol').value);
   const offComp = off.createDynamicsCompressor();
@@ -710,6 +800,8 @@ async function exportWav() {
     const nodes = buildTrackChain(off, t, offMaster, offReverb, false);
     const src = off.createBufferSource();
     src.buffer = t.buffer;
+    src.loop = true;
+    src.playbackRate.value = t.params.speed;
     src.connect(nodes.input);
     src.start(0);
   }
@@ -717,7 +809,7 @@ async function exportWav() {
   if ($('drumsOn').checked) {
     const bars = parseInt($('bars').value, 10);
     const sd = stepDur();
-    for (let s = 0; s < bars * STEPS_PER_BAR; s++) {
+    for (let s = 0; s < bars * STEPS_PER_BAR * renderLoops; s++) {
       scheduleDrumStep(off, s % STEPS_PER_BAR, s * sd, offMaster);
     }
   }
@@ -786,6 +878,7 @@ function buildTrackUI(track) {
       <div class="track-btns">
         <button class="rec-btn">&#9679; Rec</button>
         <button class="mute-btn">Mute</button>
+        <button class="rev-btn" title="Reverse playback">&#8646;</button>
         <button class="clear-btn">Clear</button>
       </div>
     </div>
@@ -799,10 +892,17 @@ function buildTrackUI(track) {
     if (ctx) applyTrackParams(track);
     if (track.state === 'playing') setTrackState(track, 'playing');
   });
+  el.querySelector('.rev-btn').addEventListener('click', (e) => {
+    if (!track.buffer) { status('Record something first, then reverse it.'); return; }
+    track.reversed = !track.reversed;
+    e.target.classList.toggle('active', track.reversed);
+    reverseTrack(track);
+  });
   el.querySelector('.clear-btn').addEventListener('click', () => {
     if (track.state === 'armed' || track.state === 'recording') cancelRecording();
     stopTrackSource(track);
     track.buffer = null;
+    resetReverse(track);
     setTrackState(track, 'empty');
     maybeUnlock();
   });
@@ -810,24 +910,36 @@ function buildTrackUI(track) {
   const fx = el.querySelector('.fx');
   const p = track.params;
 
-  fx.appendChild(slider('Volume', 0, 1, 0.01, track.vol, v => Math.round(v * 100) + '%', v => { track.vol = v; if (ctx) applyTrackParams(track); }));
+  const upd = () => { if (ctx) applyTrackParams(track); };
+  const sel = (labelText, options, value, onChange) => {
+    const label = document.createElement('label');
+    label.innerHTML = `<span>${labelText}</span>`;
+    const s = document.createElement('select');
+    options.forEach(([val, txt]) => {
+      const o = document.createElement('option'); o.value = val; o.textContent = txt;
+      if (String(val) === String(value)) o.selected = true;
+      s.appendChild(o);
+    });
+    s.addEventListener('change', () => onChange(s.value));
+    label.appendChild(s);
+    return label;
+  };
 
-  const fLabel = document.createElement('label');
-  fLabel.innerHTML = '<span>Filter</span>';
-  const fSel = document.createElement('select');
-  [['off', 'Off'], ['lowpass', 'Low-pass'], ['highpass', 'High-pass'], ['bandpass', 'Band-pass']].forEach(([val, txt]) => {
-    const o = document.createElement('option'); o.value = val; o.textContent = txt; fSel.appendChild(o);
-  });
-  fSel.addEventListener('change', () => { p.filterType = fSel.value; if (ctx) applyTrackParams(track); });
-  fLabel.appendChild(fSel);
-  fx.appendChild(fLabel);
-
-  fx.appendChild(slider('Cutoff', 60, 12000, 10, p.filterFreq, v => v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : v + ' Hz', v => { p.filterFreq = v; if (ctx) applyTrackParams(track); }));
-  fx.appendChild(slider('Resonance', 0.1, 15, 0.1, p.filterQ, v => v.toFixed(1), v => { p.filterQ = v; if (ctx) applyTrackParams(track); }));
-  fx.appendChild(slider('Delay mix', 0, 1, 0.01, p.delayMix, v => Math.round(v * 100) + '%', v => { p.delayMix = v; if (ctx) applyTrackParams(track); }));
-  fx.appendChild(slider('Delay time', 0.05, 1, 0.01, p.delayTime, v => Math.round(v * 1000) + ' ms', v => { p.delayTime = v; if (ctx) applyTrackParams(track); }));
-  fx.appendChild(slider('Feedback', 0, 0.85, 0.01, p.delayFb, v => Math.round(v * 100) + '%', v => { p.delayFb = v; if (ctx) applyTrackParams(track); }));
-  fx.appendChild(slider('Reverb', 0, 1, 0.01, p.reverbMix, v => Math.round(v * 100) + '%', v => { p.reverbMix = v; if (ctx) applyTrackParams(track); }));
+  fx.appendChild(slider('Volume', 0, 1, 0.01, track.vol, v => Math.round(v * 100) + '%', v => { track.vol = v; upd(); }));
+  fx.appendChild(slider('Pan', -1, 1, 0.01, p.pan, v => v === 0 ? 'C' : (v < 0 ? 'L' : 'R') + Math.round(Math.abs(v) * 100), v => { p.pan = v; upd(); }));
+  fx.appendChild(sel('Filter', [['off', 'Off'], ['lowpass', 'Low-pass'], ['highpass', 'High-pass'], ['bandpass', 'Band-pass'], ['notch', 'Notch']], p.filterType, v => { p.filterType = v; upd(); }));
+  fx.appendChild(slider('Cutoff', 60, 12000, 10, p.filterFreq, v => v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : v + ' Hz', v => { p.filterFreq = v; upd(); }));
+  fx.appendChild(slider('Resonance', 0.1, 15, 0.1, p.filterQ, v => v.toFixed(1), v => { p.filterQ = v; upd(); }));
+  fx.appendChild(slider('Drive', 0, 1, 0.01, p.drive, v => Math.round(v * 100) + '%', v => { p.drive = v; upd(); }));
+  fx.appendChild(slider('Delay mix', 0, 1, 0.01, p.delayMix, v => Math.round(v * 100) + '%', v => { p.delayMix = v; upd(); }));
+  fx.appendChild(slider('Delay time', 0.05, 1, 0.01, p.delayTime, v => Math.round(v * 1000) + ' ms', v => { p.delayTime = v; upd(); }));
+  fx.appendChild(slider('Feedback', 0, 0.85, 0.01, p.delayFb, v => Math.round(v * 100) + '%', v => { p.delayFb = v; upd(); }));
+  fx.appendChild(slider('Reverb', 0, 1, 0.01, p.reverbMix, v => Math.round(v * 100) + '%', v => { p.reverbMix = v; upd(); }));
+  fx.appendChild(slider('Chorus', 0, 1, 0.01, p.chorusMix, v => Math.round(v * 100) + '%', v => { p.chorusMix = v; upd(); }));
+  fx.appendChild(slider('Chorus rate', 0.1, 6, 0.1, p.chorusRate, v => v.toFixed(1) + ' Hz', v => { p.chorusRate = v; upd(); }));
+  fx.appendChild(slider('Tremolo', 0, 1, 0.01, p.tremDepth, v => Math.round(v * 100) + '%', v => { p.tremDepth = v; upd(); }));
+  fx.appendChild(slider('Trem rate', 0.5, 16, 0.1, p.tremRate, v => v.toFixed(1) + ' Hz', v => { p.tremRate = v; upd(); }));
+  fx.appendChild(sel('Speed', [['0.5', '½× (slow)'], ['1', '1×'], ['2', '2× (fast)']], p.speed, v => { p.speed = parseFloat(v); realignTrack(track); }));
 
   return el;
 }
@@ -901,6 +1013,7 @@ $('clearAllBtn').addEventListener('click', () => {
   for (const t of tracks) {
     stopTrackSource(t);
     t.buffer = null;
+    resetReverse(t);
     setTrackState(t, 'empty');
   }
   maybeUnlock();

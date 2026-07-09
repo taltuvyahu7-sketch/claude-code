@@ -26,9 +26,12 @@ will re-record what comes out of your speakers.
 - **4 loop tracks** — hit *Rec* (or keys `1`–`4`); after a 1-bar count-in the track
   records exactly one loop (BPM × loop length, sample-accurate via an AudioWorklet)
   and immediately starts looping. All tracks stay locked to the same grid.
-- **Per-track effects** — volume, low/high/band-pass filter with cutoff + resonance,
-  delay (mix / time / feedback), and a shared reverb send. Everything is tweakable
-  live while the loop plays.
+- **Per-track effects** — volume, stereo pan, low/high/band-pass/notch filter with
+  cutoff + resonance, drive (soft-clip distortion), delay (mix / time / feedback),
+  a shared reverb send, chorus (mix + rate), and tremolo (depth + rate). Everything
+  is tweakable live while the loop plays.
+- **Loop tricks** — reverse a track's audio with the ⇄ button, or play it at ½× / 2×
+  speed; both stay locked to the loop grid.
 - **Drum machine** — 16-step sequencer with synthesized kick, snare, hi-hat and clap
   (pure Web Audio, no samples), synced to the loop. It starts with a basic beat you
   can edit by clicking steps.
