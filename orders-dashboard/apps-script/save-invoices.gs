@@ -17,6 +17,7 @@ const FOLDER_NAME = 'DHL Invoices';
 const SENDERS = [
   'il.query@dhl.com',      // חשבוניות DHL Express ישראל
   'no_reply@fedex.com',    // ניירת FedEx
+  'ILinvoicequery@fedex.com', // חשבוניות FedEx ישראל
 ];
 const LOOKBACK_DAYS = 90;
 const FILE_TYPES = /\.(pdf|csv|xls|xlsx|zip)$/i;
