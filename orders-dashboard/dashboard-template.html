@@ -1,0 +1,317 @@
+<!-- INN7fashion — תבנית דשבורד הזמנות (ללא נתונים).
+     הקובץ הזה נשמר בריפו בכוונה כתבנית נקייה: אין בו שמות לקוחות, מחירים או
+     נתונים עסקיים. הרענון האוטומטי יוצר ממנו את dashboard.html (המוחרג מהריפו)
+     על-ידי החלפת בלוקי ה-DATA שמסומנים למטה. -->
+<title>INN7fashion — דשבורד הזמנות</title>
+<style>
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --series:#2a78d6; --goodtxt:#006300; --opportunity:#2a78d6;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --series:#3987e5; --goodtxt:#0ca30c;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --series:#3987e5; --goodtxt:#0ca30c;
+}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;font-size:15px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:22px;margin:0 0 2px}
+h2{font-size:17px;margin:28px 0 10px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .label{font-size:12px;color:var(--ink2)}
+.kpi .value{font-size:22px;font-weight:700}
+.kpi .note{font-size:11px;color:var(--muted)}
+.kpi.flag-good .value{color:var(--goodtxt)} .kpi.flag-warning .value{color:var(--serious)} .kpi.flag-critical .value{color:var(--critical)}
+.alert{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:8px 0;display:flex;overflow:hidden}
+.alert .stripe{width:5px;flex:none}
+.alert.critical .stripe{background:var(--critical)} .alert.serious .stripe{background:var(--serious)}
+.alert.warning .stripe{background:var(--warning)} .alert.info .stripe{background:var(--axis)} .alert.opportunity .stripe{background:var(--series)}
+.alert>div:last-child{padding:10px 14px}
+.alert .kind{font-size:11px;color:var(--muted);letter-spacing:.02em}
+.alert h3{margin:2px 0 4px;font-size:14.5px}
+.alert p{margin:0;font-size:13px;color:var(--ink2)}
+.alert .meta{font-size:11px;color:var(--muted);display:block;margin-top:6px}
+.alert.resolved{opacity:.55}
+.resolve-btn{margin-inline-start:10px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--ink2);border-radius:6px;padding:1px 8px;cursor:pointer}
+.toggle-resolved{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px 0}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:13px}
+.tablewrap{overflow-x:auto;border-radius:10px}
+th{background:var(--bg);color:var(--ink2);font-size:12px;text-align:right;padding:8px 10px;border-bottom:1px solid var(--grid)}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+tr.orow{cursor:pointer} tr.orow:hover td{background:color-mix(in srgb, var(--surface) 92%, var(--ink))}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:0 6px;margin:1px 2px;white-space:nowrap;border:1px solid var(--border);color:var(--ink2)}
+.tag.critical{color:var(--critical);border-color:var(--critical)}
+.tag.serious{color:var(--serious);border-color:var(--serious)}
+.tag.warning{color:var(--serious);border-color:var(--warning)}
+.tag.opportunity{color:var(--series);border-color:var(--series)}
+.tag.good{color:var(--goodtxt);border-color:var(--good)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.filters button{border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer}
+.filters button.on{color:var(--ink);border-color:var(--ink2);font-weight:600}
+#search{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;font-size:13px;min-width:180px}
+tr.detailrow>td{background:var(--bg);padding:12px 16px}
+.dtable{font-size:12.5px;width:100%}
+.dtable th,.dtable td{padding:4px 8px;text-align:right}
+.dsum{font-size:12.5px;color:var(--ink2);margin-top:8px;line-height:1.7}
+.msg{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:8px 0}
+.msg .who{font-weight:600;font-size:13.5px}
+.msg .when{color:var(--muted);font-size:11px;margin-inline-start:8px}
+.msg p{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+.msg.resolved{opacity:.55}
+.chartcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+a{color:var(--series)}
+bdi{unicode-bidi:isolate}
+</style>
+<div class="wrap" dir="rtl">
+<h1>INN7fashion — דשבורד הזמנות 🛍️</h1>
+<p class="sub">עודכן: <span id="updated"></span></p>
+<div class="kpis" id="kpis"></div>
+<h2>דורש טיפול עכשיו</h2>
+<div id="alerts"></div>
+<h2>מכירות יומיות</h2>
+<div class="chartcard" id="chart"></div>
+<h2>הזמנות</h2>
+<div class="filters" id="filters"></div>
+<div class="tablewrap"><table id="orders"><thead></thead><tbody></tbody></table></div>
+<h2>הודעות לקוחות ללא מענה</h2>
+<div id="msgs"></div>
+</div>
+<script>
+/* ==== DATA-START (מוחלף על-ידי הרענון האוטומטי; כאן ריק בכוונה) ==== */
+const ORDERS = [];
+const UPDATED = "תבנית — טרם נטענו נתונים";
+const ILS_PER_EUR = 3.95;
+const SHIP_COSTS = {};
+const MESSAGES = [];
+const ALERTS = [];
+const MSG_BY_ORDER = {};
+const BY_DAY = [];
+const NOW = new Date("2026-01-01T00:00:00Z");
+const CHART_START = "2026-01-01T00:00:00Z";
+const KPI_RANGE_LABEL = "הזמנות";
+/* ==== DATA-END ==== */
+
+// ---------- סימון "טופל" (נשמר ב-localStorage של הדפדפן) ----------
+const LS_KEY = "inn7-dash-resolved";
+let resolved;
+try { resolved = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }
+catch (e) { resolved = new Set(); }
+function saveResolved() { try { localStorage.setItem(LS_KEY, JSON.stringify([...resolved])); } catch (e) {} }
+let showResolvedAlerts = false, showResolvedMsgs = false;
+
+// ---------- זיהוי בעיות ----------
+const daysSince = d => Math.floor((NOW - new Date(d)) / 86400000);
+const eur = n => "€" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+const eur2 = n => "€" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const isPreorder = o => o.items.length > 0 && o.items.every(it => /Preorder|מקדמה/.test(it.t));
+
+function orderIssues(o) {
+  const issues = [];
+  if (!o.cancelled && o.fin === "AUTHORIZED")
+    issues.push({ sev: "warning", label: "תשלום מאושר — לגבות ולשלוח" });
+  if (!o.cancelled && (o.fin === "PAID" || o.fin === "PARTIALLY_REFUNDED") && o.ful === "UNFULFILLED") {
+    if (isPreorder(o)) issues.push({ sev: "good", label: "מקדמת Preorder — ממתין כמתוכנן" });
+    else { const d = daysSince(o.d); issues.push({ sev: d > 3 ? "critical" : "warning", label: `שולם ולא נשלח ${d} ימים` }); }
+  }
+  if (o.ship.some(s => s.s === "DELAYED")) issues.push({ sev: "serious", label: "משלוח מעוכב" });
+  if (o.ship.some(s => s.s === "ATTEMPTED_DELIVERY")) issues.push({ sev: "serious", label: "ניסיון מסירה נכשל" });
+  if (o.ship.some(s => s.s === "NOT_DELIVERED")) issues.push({ sev: "critical", label: "משלוח לא נמסר" });
+  if (o.cancelled && o.cr === "INVENTORY") issues.push({ sev: "critical", label: "בוטל — חוסר מלאי" });
+  else if (o.cancelled) issues.push({ sev: "info", label: "בוטל" });
+  if (o.fin === "PARTIALLY_REFUNDED" && o.ref > 0) issues.push({ sev: "warning", label: `החזר חלקי ${eur(o.ref)}` });
+  if (MSG_BY_ORDER[o.n] === "critical") issues.push({ sev: "critical", label: "פניית לקוח פתוחה" });
+  if (MSG_BY_ORDER[o.n] === "opportunity") issues.push({ sev: "opportunity", label: "הזדמנות מול הלקוח" });
+  return issues;
+}
+function category(o) {
+  if (o.cancelled) return "cancelled";
+  const iss = orderIssues(o).filter(i => !["info","opportunity","good"].includes(i.sev));
+  if (iss.length) return "action";
+  if (o.ship.length && o.ship.every(s => ["DELIVERED", "FULFILLED"].includes(s.s))) return "delivered";
+  return "transit";
+}
+
+// ---------- KPI ----------
+function renderKpis() {
+  const active = ORDERS.filter(o => !o.cancelled);
+  const revenue = ORDERS.filter(o => ["PAID", "PARTIALLY_REFUNDED"].includes(o.fin)).reduce((a, o) => a + o.t - o.ref, 0);
+  const needAction = ORDERS.filter(o => category(o) === "action");
+  const cancelledOrders = ORDERS.filter(o => o.cancelled);
+  const invCancelled = cancelledOrders.filter(o => o.cr === "INVENTORY");
+  const unfulfilled = active.filter(o => o.ful === "UNFULFILLED");
+  const preorders = unfulfilled.filter(isPreorder);
+  const authorized = active.filter(o => o.fin === "AUTHORIZED").length;
+  const openMsgs = MESSAGES.filter(m => !resolved.has(m.id)).length;
+  const paidOrders = ORDERS.filter(o => ["PAID", "PARTIALLY_REFUNDED"].includes(o.fin));
+  const grossProfit = paidOrders.reduce((a, o) => a + o.t - o.shipc - o.ref, 0)
+    - paidOrders.reduce((a, o) => a + o.items.reduce((b, it) => b + (it.cg || 0) * it.q, 0), 0);
+  const KPIS = [
+    { label: KPI_RANGE_LABEL, value: ORDERS.length, note: `${active.length} פעילות · ${cancelledOrders.length} בוטלו` },
+    { label: "הכנסות נטו ששולמו", value: eur(revenue), note: "אחרי החזרים, ללא ביטולים" },
+    { label: "רווח גולמי משוער", value: eur(grossProfit), flag: "good", note: "לפי עלויות COG שמוזנות בשופיפיי" },
+    { label: "ממתינות לשילוח", value: unfulfilled.length, flag: "warning", note: `מתוכן ${preorders.length} מקדמות Preorder · ${authorized} ממתינות לגבייה` },
+    { label: "דורשות טיפול", value: needAction.length, flag: "critical", note: "בעיות תשלום, שילוח או פניות" },
+    { label: "הודעות ללא מענה", value: openMsgs, flag: openMsgs ? "warning" : "good", note: resolved.size ? `${resolved.size} סומנו כטופלו` : "מהג'ימייל" },
+    { label: "אבדן מביטולי מלאי", value: eur(invCancelled.reduce((a, o) => a + o.t, 0)), flag: invCancelled.length ? "critical" : "good", note: `${invCancelled.length} הזמנות בוטלו בגלל חוסר מלאי` }
+  ];
+  document.getElementById("kpis").innerHTML = KPIS.map(k => `
+    <div class="kpi ${k.flag ? "flag-" + k.flag : ""}">
+      <span class="label">${k.label}</span>
+      <span class="value"><bdi>${k.value}</bdi></span>
+      <span class="note">${k.note}</span>
+    </div>`).join("");
+}
+
+// ---------- התראות ----------
+function alertCard(a, isResolved) {
+  return `
+  <div class="alert ${a.sev}${isResolved ? " resolved" : ""}">
+    <div class="stripe"></div>
+    <div>
+      <span class="kind">${a.kind}</span>
+      <h3>${a.title}</h3>
+      <p>${a.text}</p>
+      <span class="meta">${a.meta || ""}
+        <button class="resolve-btn${isResolved ? " undo" : ""}" data-resolve="${a.id}">${isResolved ? "החזר ↩" : "טופל ✓"}</button>
+      </span>
+    </div>
+  </div>`;
+}
+function renderAlerts() {
+  const open = ALERTS.filter(a => !resolved.has(a.id));
+  const done = ALERTS.filter(a => resolved.has(a.id));
+  let html = open.map(a => alertCard(a, false)).join("") || '<p class="sub">אין התראות פתוחות 🎉</p>';
+  if (done.length) {
+    html += `<button class="toggle-resolved" id="tgA">${showResolvedAlerts ? "הסתר" : "הצג"} ${done.length} שטופלו</button>`;
+    if (showResolvedAlerts) html += done.map(a => alertCard(a, true)).join("");
+  }
+  document.getElementById("alerts").innerHTML = html;
+  const t = document.getElementById("tgA");
+  if (t) t.onclick = () => { showResolvedAlerts = !showResolvedAlerts; renderAlerts(); };
+}
+
+// ---------- גרף ----------
+function drawChart() {
+  const days = [];
+  const start = new Date(CHART_START);
+  for (let i = 0; i < 20; i++) {
+    const d = new Date(start.getTime() + i * 86400000).toISOString().slice(0, 10);
+    const hit = BY_DAY.find(x => x.d === d);
+    days.push({ d, rev: hit ? hit.rev : 0, n: hit ? hit.n : 0 });
+  }
+  const W = 1040, H = 240, PADL = 8, PADR = 46, PADT = 12, PADB = 26;
+  const plotW = W - PADL - PADR, plotH = H - PADT - PADB;
+  const max = Math.max(2000, Math.ceil(Math.max(0, ...days.map(x => x.rev)) / 2000) * 2000);
+  const bw = plotW / days.length;
+  const y = v => PADT + plotH - (v / max) * plotH;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="הכנסות יומיות" style="width:100%;height:auto;display:block" dir="ltr">`;
+  for (let g = 0; g <= 4; g++) {
+    const v = (max / 4) * g, yy = y(v);
+    s += `<line x1="${PADL}" y1="${yy}" x2="${W - PADR}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<text x="${W - PADR + 6}" y="${yy + 4}" font-size="11" fill="var(--muted)" font-family="inherit">${v >= 1000 ? (v / 1000) + "k" : v}</text>`;
+  }
+  days.forEach((day, i) => {
+    const x = PADL + i * bw + bw * 0.18, w = bw * 0.64;
+    const h = Math.max(day.rev > 0 ? 3 : 0, plotH * (day.rev / max));
+    s += `<rect x="${x}" y="${y(0) - h}" width="${w}" height="${h}" rx="2" fill="var(--series)"><title>${day.d} · €${day.rev.toLocaleString()} · ${day.n} הזמנות</title></rect>`;
+    if (i % 2 === 0) s += `<text x="${x + w / 2}" y="${H - 8}" font-size="10" fill="var(--muted)" text-anchor="middle" font-family="inherit">${day.d.slice(8, 10)}.${day.d.slice(5, 7)}</text>`;
+  });
+  s += `<line x1="${PADL}" y1="${y(0)}" x2="${W - PADR}" y2="${y(0)}" stroke="var(--axis)" stroke-width="1"/></svg>`;
+  document.getElementById("chart").innerHTML = s;
+}
+
+// ---------- טבלת הזמנות ----------
+let filter = "all", q = "";
+const FILTERS = [["all","הכל"],["action","דורש טיפול"],["transit","בדרך"],["delivered","נמסר"],["cancelled","בוטל"]];
+function shipIls(o) {
+  return [...new Set(o.ship.map(s => s.tn).filter(Boolean))].reduce((a, tn) => a + (SHIP_COSTS[tn] || 0), 0);
+}
+function detailHTML(o) {
+  const rows = o.items.map(it => {
+    const disc = it.po > it.pd ? Math.round((1 - it.pd / it.po) * 100) + "%" : "—";
+    const profit = it.cg != null ? eur2((it.pd - it.cg) * it.q) : "לא מוזן";
+    const cg = it.cg == null ? "לא מוזן" : (it.cg === 0 ? "⚠ 0" : eur2(it.cg));
+    return `<tr><td>${it.t}${it.v ? " · " + it.v : ""}</td><td>${it.q}</td><td><bdi>${eur2(it.po)}</bdi></td><td>${disc}</td><td><bdi>${eur2(it.pd)}</bdi></td><td><bdi>${eur2(it.pd * it.q)}</bdi></td><td><bdi>${cg}</bdi></td><td><bdi>${profit}</bdi></td></tr>`;
+  }).join("");
+  const itemsPaid = o.items.reduce((a, it) => a + it.pd * it.q, 0);
+  const cogs = o.items.reduce((a, it) => a + (it.cg || 0) * it.q, 0);
+  const gross = o.t - o.shipc - o.ref - cogs;
+  const sIls = shipIls(o);
+  const shipLine = sIls ? `עלות שילוח בפועל: <b>₪${sIls.toLocaleString("en-US",{maximumFractionDigits:0})}</b> ≈ ${eur2(sIls / ILS_PER_EUR)} · רווח נטו אחרי שילוח: <b><bdi>${eur2(gross - sIls / ILS_PER_EUR)}</bdi></b>` : "עלות שילוח בפועל: טרם נקלטה מחשבונית";
+  const dcode = o.dcodes && o.dcodes.length ? ` (קוד: ${o.dcodes.join(", ")})` : "";
+  return `<table class="dtable"><thead><tr><th>פריט</th><th>כמות</th><th>מחיר מלא</th><th>הנחה</th><th>לאחר הנחה</th><th>סה"כ</th><th>עלות (COG)</th><th>רווח</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="dsum">מחיר מלא: <bdi>${eur2(o.sub + o.disc)}</bdi> · הנחה: <bdi>${eur2(o.disc)}</bdi>${dcode} · משלוח ששולם: <bdi>${eur2(o.shipc)}</bdi> · <b>סה"כ: <bdi>${eur2(o.t)}</bdi></b>${o.ref ? ` · הוחזר: <bdi>${eur2(o.ref)}</bdi>` : ""}<br>
+  עלות סחורה: <bdi>${eur2(cogs)}</bdi> · רווח גולמי: <b><bdi>${eur2(gross)}</bdi></b> (${o.t ? Math.round(gross / o.t * 100) : 0}%)<br>${shipLine}</div>`;
+}
+function renderTable() {
+  const FIN = { PAID: ["שולם","good"], AUTHORIZED: ["ממתין לגבייה","warning"], VOIDED: ["בוטל","info"], PARTIALLY_REFUNDED: ["הוחזר חלקית","warning"], REFUNDED: ["הוחזר","info"], PENDING: ["ממתין","warning"] };
+  const SHIP = { DELIVERED: ["נמסר","good"], IN_TRANSIT: ["בדרך",""], OUT_FOR_DELIVERY: ["בחלוקה",""], FULFILLED: ["נשלח",""], CONFIRMED: ["נשלח",""], DELAYED: ["מעוכב","serious"], ATTEMPTED_DELIVERY: ["מסירה נכשלה","serious"], NOT_DELIVERED: ["לא נמסר","critical"], LABEL_PRINTED: ["הודפסה תווית",""], LABEL_PURCHASED: ["נרכשה תווית",""] };
+  document.querySelector("#orders thead").innerHTML = `<tr><th>הזמנה</th><th>תאריך</th><th>לקוח</th><th>מדינה</th><th>סה"כ</th><th>תשלום</th><th>משלוח</th><th>בעיות</th></tr>`;
+  const list = ORDERS.filter(o => (filter === "all" || category(o) === filter) &&
+    (!q || (o.n + " " + o.c + " " + o.co).toLowerCase().includes(q.toLowerCase())));
+  document.querySelector("#orders tbody").innerHTML = list.map((o, i) => {
+    const fin = FIN[o.fin] || [o.fin, ""];
+    const ships = o.ship.length ? o.ship.map(s => {
+      const st = SHIP[s.s] || [s.s, ""];
+      const label = s.tn ? `<a href="${s.tu}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${st[0]}</a>` : st[0];
+      return `<span class="tag ${st[1]}">${label}</span>`;
+    }).join("") : (o.cancelled ? "—" : '<span class="tag">טרם נשלח</span>');
+    const iss = orderIssues(o).map(x => `<span class="tag ${x.sev}">${x.label}</span>`).join("") || "—";
+    return `<tr class="orow" data-i="${i}"><td><bdi>${o.n}</bdi></td><td>${o.d.slice(8,10)}.${o.d.slice(5,7)}</td><td>${o.c || "—"}</td><td>${o.co || "—"}</td><td><bdi>${eur2(o.t)}</bdi></td><td><span class="tag ${fin[1]}">${fin[0]}</span></td><td>${ships}</td><td>${iss}</td></tr>
+    <tr class="detailrow" data-d="${i}" hidden><td colspan="8">${detailHTML(o)}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("#orders tr.orow").forEach(tr => tr.onclick = () => {
+    const d = document.querySelector(`#orders tr.detailrow[data-d="${tr.dataset.i}"]`);
+    if (d) d.hidden = !d.hidden;
+  });
+  document.getElementById("filters").innerHTML = FILTERS.map(([k, lbl]) =>
+    `<button class="${filter === k ? "on" : ""}" data-f="${k}">${lbl}</button>`).join("") +
+    ` <input id="search" placeholder="חיפוש הזמנה / לקוח…" value="${q.replace(/"/g,'&quot;')}">`;
+  document.querySelectorAll("#filters button").forEach(b => b.onclick = () => { filter = b.dataset.f; renderTable(); });
+  const s = document.getElementById("search");
+  s.oninput = () => { q = s.value; renderTable(); };
+  s.onkeydown = e => e.stopPropagation();
+}
+
+// ---------- הודעות ----------
+function msgCard(m, isResolved) {
+  return `<div class="msg ${m.sev}${isResolved ? " resolved" : ""}">
+    <span class="who">${m.who}</span><span class="when">${m.date}${m.order ? " · " + m.order : ""}</span>
+    <button class="resolve-btn${isResolved ? " undo" : ""}" data-resolve="${m.id}" style="float:left">${isResolved ? "החזר ↩" : "טופל ✓"}</button>
+    <p>${m.text}</p></div>`;
+}
+function renderMsgs() {
+  const open = MESSAGES.filter(m => !resolved.has(m.id));
+  const done = MESSAGES.filter(m => resolved.has(m.id));
+  let html = open.map(m => msgCard(m, false)).join("") || '<p class="sub">אין הודעות פתוחות 🎉</p>';
+  if (done.length) {
+    html += `<button class="toggle-resolved" id="tgM">${showResolvedMsgs ? "הסתר" : "הצג"} ${done.length} שטופלו</button>`;
+    if (showResolvedMsgs) html += done.map(m => msgCard(m, true)).join("");
+  }
+  document.getElementById("msgs").innerHTML = html;
+  const t = document.getElementById("tgM");
+  if (t) t.onclick = () => { showResolvedMsgs = !showResolvedMsgs; renderMsgs(); };
+}
+
+// ---------- אתחול ----------
+function renderAll() {
+  document.getElementById("updated").textContent = UPDATED;
+  renderKpis(); renderAlerts(); drawChart(); renderTable(); renderMsgs();
+}
+document.addEventListener("click", e => {
+  const id = e.target && e.target.dataset && e.target.dataset.resolve;
+  if (!id) return;
+  if (resolved.has(id)) resolved.delete(id); else resolved.add(id);
+  saveResolved(); renderAll();
+});
+renderAll();
+</script>
